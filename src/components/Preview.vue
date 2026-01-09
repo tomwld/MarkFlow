@@ -131,4 +131,15 @@ const scrollToCursor = (newLine: number) => {
 :deep(.markdown-body) {
   background-color: transparent;
 }
+
+/* Fix for ordered/unordered list styles sometimes being overridden by reset css */
+:deep(.markdown-body ul) {
+  list-style-type: disc;
+  padding-left: 2em;
+}
+
+:deep(.markdown-body ol) {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
 </style>
