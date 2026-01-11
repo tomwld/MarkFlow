@@ -20,6 +20,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'link-click', href: string): void
+  (e: 'update:content', content: string): void
 }>()
 
 // Plugin to add data-line attribute
@@ -51,7 +52,7 @@ const md = new MarkdownIt({
   }
 })
   .use(injectLineNumbers)
-  .use(taskLists)
+  .use(taskLists, { enabled: true })
   .use(footnote)
   .use(abbr)
   .use(mark)
@@ -121,8 +122,42 @@ const scrollToCursor = (newLine: number) => {
   }
 }
 
+const toggleTask = (lineIndex: number) => {
+  const lines = props.content.split('\n')
+  
+  if (lineIndex >= 0 && lineIndex < lines.length) {
+    const line = lines[lineIndex]
+    // Regex to find task checkbox: start of line, optional whitespace, bullet, whitespace, [ ], whitespace
+    // Note: markdown-it-task-lists might render for various bullets
+    const match = line.match(/^(\s*[-*+]\s+)\[([ xX])\]/)
+    
+    if (match) {
+      const isChecked = match[2] !== ' '
+      const newStatus = isChecked ? ' ' : 'x'
+      // Use replacement to preserve indentation and bullet type
+      const newLine = line.replace(/^(\s*[-*+]\s+)\[([ xX])\]/, `$1[${newStatus}]`)
+      lines[lineIndex] = newLine
+      emit('update:content', lines.join('\n'))
+    }
+  }
+}
+
 const handleClick = async (event: MouseEvent) => {
   const target = event.target as HTMLElement
+  
+  // Handle task list checkbox toggle
+  if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox' && target.classList.contains('task-list-item-checkbox')) {
+    // Find closest li with data-line
+    const li = target.closest('li')
+    if (li && li.hasAttribute('data-line')) {
+      const lineIndex = parseInt(li.getAttribute('data-line')!, 10)
+      if (!isNaN(lineIndex)) {
+        toggleTask(lineIndex)
+      }
+    }
+    return
+  }
+
   const link = target.closest('a')
   
   if (link) {

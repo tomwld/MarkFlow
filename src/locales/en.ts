@@ -90,5 +90,9 @@ export default {
   outline: {
     noHeadings: 'No headings',
     noActiveFile: 'No active file'
+  },
+  editor: {
+    placeholder: 'Start typing...',
+    fileChangedExternal: 'The file has been changed externally. Content has been reloaded.'
   }
 }

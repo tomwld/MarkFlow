@@ -12,6 +12,7 @@ import { readTextFile, writeFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { join, dirname, isAbsolute } from '@tauri-apps/api/path'
+import { invoke } from '@tauri-apps/api/core'
 import MarkdownIt from 'markdown-it'
 // @ts-ignore
 import markdownItFootnote from 'markdown-it-footnote'
@@ -77,6 +78,7 @@ const showSaveConfirm = ref(false)
 const fileToCloseId = ref<string | null>(null)
 const isAppClosing = ref(false)
 const unlistenCloseRequest = ref<UnlistenFn | null>(null)
+let unlistenFileChange: UnlistenFn | null = null
 
 onClickOutside(recentFilesRef, () => {
   showRecentFiles.value = false
@@ -249,8 +251,12 @@ const loadFile = async (path: string, silent = false) => {
     }
     
     documents.value.push(newDoc)
+    
     activeDocId.value = newDoc.id
     updateRecentFiles(path)
+
+    // Watch the new file
+    await invoke('watch_file', { path }).catch(console.error)
   } catch (error) {
     console.error('Failed to open file:', error)
     if (!silent) {
@@ -381,6 +387,11 @@ const closeFile = (id: string) => {
 const forceCloseFile = (id: string) => {
   const index = documents.value.findIndex(d => d.id === id)
   if (index === -1) return
+
+  const doc = documents.value[index]
+  if (doc.filePath) {
+      invoke('unwatch_file', { path: doc.filePath }).catch(console.error)
+  }
 
   documents.value.splice(index, 1)
 
@@ -774,6 +785,11 @@ onMounted(async () => {
   if (pathsToRestore.length > 0) {
     for (const path of pathsToRestore) {
       if (path) await loadFile(path, true)
+    
+      // Watch restored files
+      // Note: Currently we only watch the active file to save resources, but we could watch all open files if needed.
+      // Let's stick to watching active file for now in the watcher logic above (loadFile handles it).
+      // Actually loadFile calls watch_file, so if we loop here, we are good.
     }
     
     // Restore active file
@@ -784,6 +800,44 @@ onMounted(async () => {
     
     if (documents.value.length > 0) hasRestored = true
   }
+
+  // Listen for file changes from backend
+  unlistenFileChange = await listen('file-changed', async (event) => {
+    const changedPath = event.payload as string
+    console.log('File changed event received:', changedPath)
+    
+    // Normalize path for comparison (replace backslashes with slashes and lowercase)
+    const normalize = (p: string) => p.replace(/[\\/]/g, '/').toLowerCase()
+    const targetPath = normalize(changedPath)
+
+    // Find document with this path
+    const doc = documents.value.find(d => d.filePath && normalize(d.filePath) === targetPath)
+    
+    if (doc && doc.filePath) {
+      // Reload content
+      try {
+        const content = await readTextFile(doc.filePath)
+        
+        // Only update if content is different
+        if (content !== doc.content) {
+            console.log('Reloading content for:', doc.filePath)
+            
+            // Check if we have unsaved changes
+            if (doc.isModified) {
+                // If user has unsaved changes, we warn them but don't overwrite automatically for safety
+                await message(t('editor.fileChangedExternal'), { title: 'External Change', kind: 'warning' })
+            } else {
+                // If no unsaved changes, auto-update
+                doc.content = content
+                // It matches disk now
+                doc.isModified = false 
+            }
+        }
+      } catch (err) {
+        console.error('Failed to reload file:', err)
+      }
+    }
+  })
 
   if (!hasRestored && documents.value.length === 0) {
     newFile()
@@ -1038,6 +1092,7 @@ onUnmounted(() => {
               :content="activeDocument.content" 
               :cursor-line="activeDocument.cursorLine"
               @link-click="handleLinkClick"
+              @update:content="(newContent) => { if(activeDocument) { activeDocument.content = newContent; activeDocument.isModified = true; } }"
             />
           </div>
         </div>

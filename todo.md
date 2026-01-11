@@ -13,20 +13,20 @@
   * 粗体（**text**）与斜体（_text_）
   * 无序列表（-、\*、+）与有序列表（1.）
   * 任务列表（- \[ ]、- \[x]）
-    - [X] Task item
-    - [ ] Task item2
-    - [ ] Task item3
+    - [x] 待完成任务
+    - [x] 待完成任务
+    - [ ] 待完成任务
+    **其他的**
   * 代码块（\`\`\` language）与行内代码（`code`）
     
 ```sql
-select * from sys_user
+select * from sys_user;
 create table sys_role {
   id bigint,
   name varchar(200),
   desc varchar(1000)
 }
 ```
-
   * 引用区块（>）
     > 这是一个引用，来自哪里哪里
   * 链接（[text](https://chat.qwen.ai/c/url)）与图片
@@ -54,6 +54,8 @@ create table sys_role {
   * 智能列表缩进
   * 自动创建列表项
   * 输入时自动应用正确格式
+    - [x] Task item
+    - [x] Task item
 
 ## 2. 用户界面
 

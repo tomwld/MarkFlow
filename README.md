@@ -13,16 +13,20 @@
 - **👀 Real-time Preview**: Instant Markdown rendering with synchronized scrolling and cursor positioning.
 - **🌗 Themeable**: Native support for Light and Dark modes.
 - **📂 File Management**: 
-  - Integrated File Tree and Outline view.
+  - Integrated File Tree and Outline view (Toggleable sidebar sections).
   - Tabbed editing interface.
   - Auto-save and session persistence (restores open files on launch).
+  - Recent files history.
   - "Smart Naming" for new files based on content.
 - **🛠️ Productivity Tools**:
   - **Focus Mode**: Distraction-free writing.
+  - **Interactive Preview**: Clickable task lists and links in the preview window.
+  - **Code Highlighting**: Syntax highlighting for code blocks in both editor and preview.
   - **Emoji Picker**: Easily insert emojis into your documents.
   - **Toolbar Shortcuts**: Quick access to tables, footnotes, task lists, and code blocks.
+  - **Status Bar**: Real-time word count, line count, and cursor position.
 - **🌍 Internationalization**: Full support for English and Simplified Chinese (简体中文).
-- **📤 Export**: Export documents to styled HTML.
+- **📤 Export**: Export documents to styled HTML and PDF.
 
 ## 🛠️ Tech Stack
 

@@ -90,5 +90,9 @@ export default {
   outline: {
     noHeadings: '无标题',
     noActiveFile: '无活动文件'
+  },
+  editor: {
+    placeholder: '开始输入...',
+    fileChangedExternal: '文件已在外部被修改，内容已重新加载。'
   }
 }

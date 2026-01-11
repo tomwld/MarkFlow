@@ -1,5 +1,57 @@
 use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
-use tauri::{Emitter, AppHandle, Wry};
+use tauri::{Emitter, AppHandle, Wry, Manager};
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+use notify::{Watcher, RecursiveMode, RecommendedWatcher, Config};
+use std::path::Path;
+
+struct WatcherState {
+    watcher: Arc<Mutex<Option<RecommendedWatcher>>>,
+}
+
+#[tauri::command]
+fn watch_file(app: AppHandle, path: String, state: tauri::State<WatcherState>) -> Result<(), String> {
+    let app_handle = app.clone();
+    let path_clone = path.clone();
+    
+    let mut watcher_guard = state.watcher.lock().map_err(|e| e.to_string())?;
+    
+    if watcher_guard.is_none() {
+        let watcher = notify::recommended_watcher(move |res: Result<notify::Event, notify::Error>| {
+            match res {
+               Ok(event) => {
+                   match event.kind {
+                       notify::EventKind::Access(_) => {}, // Ignore access events
+                       _ => {
+                           for path in event.paths {
+                               let _ = app_handle.emit("file-changed", path.to_string_lossy().to_string());
+                           }
+                       }
+                   }
+               },
+               Err(e) => println!("watch error: {:?}", e),
+            }
+        }).map_err(|e| e.to_string())?;
+        *watcher_guard = Some(watcher);
+    }
+
+    if let Some(watcher) = watcher_guard.as_mut() {
+        let _ = watcher.watch(Path::new(&path), RecursiveMode::NonRecursive);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn unwatch_file(path: String, state: tauri::State<WatcherState>) -> Result<(), String> {
+    let mut watcher_guard = state.watcher.lock().map_err(|e| e.to_string())?;
+    
+    if let Some(watcher) = watcher_guard.as_mut() {
+        let _ = watcher.unwatch(Path::new(&path));
+    }
+    
+    Ok(())
+}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -137,6 +189,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .manage(WatcherState { watcher: Arc::new(Mutex::new(None)) })
         .setup(|app| {
             let handle = app.handle();
             let labels = MenuLabels::default();
@@ -149,7 +202,7 @@ pub fn run() {
             // Emit event to frontend
              let _ = app.emit("menu-event", event_id);
         })
-        .invoke_handler(tauri::generate_handler![greet, update_menu]);
+        .invoke_handler(tauri::generate_handler![greet, update_menu, watch_file, unwatch_file]);
 
 
     if let Err(err) = builder.run(tauri::generate_context!()) {
