@@ -8,14 +8,34 @@ import FileTree from './components/FileTree.vue'
 import Outline from './components/Outline.vue'
 import { type MarkdownDocument } from './types/document'
 import { open, save, message } from '@tauri-apps/plugin-dialog'
-import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
+import { readTextFile, writeFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { join, dirname, isAbsolute } from '@tauri-apps/api/path'
 import MarkdownIt from 'markdown-it'
-import { useDark, useToggle, useStorage, useIntervalFn } from '@vueuse/core'
+// @ts-ignore
+import markdownItFootnote from 'markdown-it-footnote'
+// @ts-ignore
+import markdownItTaskLists from 'markdown-it-task-lists'
+import { useDark, useToggle, useStorage, useIntervalFn, onClickOutside } from '@vueuse/core'
+// @ts-ignore
+import html2pdf from 'html2pdf.js'
+// @ts-ignore
+import githubMarkdownCss from 'github-markdown-css/github-markdown.css?inline'
+// @ts-ignore
+import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.css?inline'
 import SettingsModal from './components/SettingsModal.vue'
+import SaveConfirmModal from './components/SaveConfirmModal.vue'
 import EmojiPicker from './components/EmojiPicker.vue'
 import { useI18n } from 'vue-i18n'
 import { updateMenuLanguage } from './utils/menu'
+// @ts-ignore
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
+// @ts-ignore
+import hljsGithubCss from 'highlight.js/styles/github.css?inline'
+// @ts-ignore
+import hljsGithubDarkCss from 'highlight.js/styles/github-dark.css?inline'
 
 // i18n
 const { t } = useI18n()
@@ -39,8 +59,29 @@ const currentFolder = useStorage<string | null>('current-folder', null)
 const scrollToLine = ref<number | null>(null)
 const showSidebar = ref(true)
 const showOutline = ref(true)
+const showFiles = ref(true)
 const showSettings = ref(false)
+
+const toggleOutline = () => {
+  showOutline.value = !showOutline.value
+  if (showOutline.value) {
+    showSidebar.value = true
+  }
+}
 const showEmojiPicker = ref(false)
+const showRecentFiles = ref(false)
+const recentFilesRef = ref(null)
+
+// Save Confirm Dialog
+const showSaveConfirm = ref(false)
+const fileToCloseId = ref<string | null>(null)
+const isAppClosing = ref(false)
+const unlistenCloseRequest = ref<UnlistenFn | null>(null)
+
+onClickOutside(recentFilesRef, () => {
+  showRecentFiles.value = false
+})
+
 const editorRef = ref<any>(null)
 
 // Markdown Insertion
@@ -59,7 +100,17 @@ const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock') =
       text = '\n| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |\n'
       break
     case 'footnote':
-      text = '[^1]\n\n[^1]: Footnote text'
+      const content = activeDocument.value?.content || ''
+      const matches = content.matchAll(/\[\^(\d+)\]/g)
+      let maxNum = 0
+      for (const match of matches) {
+        const num = parseInt(match[1])
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num
+        }
+      }
+      const nextNum = maxNum + 1
+      text = `[^${nextNum}]\n\n[^${nextNum}]: Footnote text`
       break
     case 'tasklist':
       text = '- [ ] Task item'
@@ -102,39 +153,6 @@ const stopSidebarResize = () => {
   document.body.style.userSelect = ''
   window.removeEventListener('mousemove', handleSidebarResize)
   window.removeEventListener('mouseup', stopSidebarResize)
-}
-
-// Outline Resizing
-const outlineWidth = useStorage('outline-width', 200)
-const isOutlineResizing = ref(false)
-const outlineStartX = ref(0)
-const outlineStartWidth = ref(0)
-
-const startOutlineResize = (e: MouseEvent) => {
-  isOutlineResizing.value = true
-  outlineStartX.value = e.clientX
-  outlineStartWidth.value = outlineWidth.value
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-  
-  window.addEventListener('mousemove', handleOutlineResize)
-  window.addEventListener('mouseup', stopOutlineResize)
-}
-
-const handleOutlineResize = (e: MouseEvent) => {
-  if (!isOutlineResizing.value) return
-  // Dragging left increases width, right decreases width
-  const diff = outlineStartX.value - e.clientX
-  const newWidth = outlineStartWidth.value + diff
-  outlineWidth.value = Math.min(Math.max(newWidth, 150), 600)
-}
-
-const stopOutlineResize = () => {
-  isOutlineResizing.value = false
-  document.body.style.cursor = ''
-  document.body.style.userSelect = ''
-  window.removeEventListener('mousemove', handleOutlineResize)
-  window.removeEventListener('mouseup', stopOutlineResize)
 }
 
 // Recent Files
@@ -241,6 +259,29 @@ const loadFile = async (path: string, silent = false) => {
   }
 }
 
+const handleLinkClick = async (href: string) => {
+  try {
+    // Decode URI component to handle spaces and special characters
+    const decodedHref = decodeURIComponent(href)
+    let targetPath = decodedHref
+    
+    // If not absolute, resolve relative to current file
+    if (!await isAbsolute(decodedHref)) {
+      if (activeDocument.value && activeDocument.value.filePath) {
+        const dir = await dirname(activeDocument.value.filePath)
+        targetPath = await join(dir, decodedHref)
+      } else {
+        // Cannot resolve relative path for untitled file
+        return
+      }
+    }
+    
+    await loadFile(targetPath)
+  } catch (error) {
+    console.error('Failed to handle link click:', error)
+  }
+}
+
 const openFile = async () => {
   try {
     const selected = await open({
@@ -329,29 +370,77 @@ const closeFile = (id: string) => {
 
   const doc = documents.value[index]
   if (doc.isModified) {
-    // Ideally we should ask the user, but for now we'll just not close or maybe save?
-    // Let's implement a simple confirm or just close (since auto-save exists)
-    // Actually, auto-save runs every 5 mins, so changes might be lost.
-    // Given no native confirm dialog easily available without UI blocking, 
-    // we will rely on auto-save or user responsibility for now, or just warn in console.
-    // Better: if it has a path, save it. If untitled, maybe don't close?
-    if (doc.filePath) {
-      // Try to save synchronously-ish? No, async.
-      // We'll skip saving here to avoid complexity for this specific step,
-      // but in a real app we'd show a modal.
-    }
+    fileToCloseId.value = id
+    showSaveConfirm.value = true
+    return
   }
+
+  forceCloseFile(id)
+}
+
+const forceCloseFile = (id: string) => {
+  const index = documents.value.findIndex(d => d.id === id)
+  if (index === -1) return
 
   documents.value.splice(index, 1)
 
   if (activeDocId.value === id) {
-    // Switch to neighbor
     if (documents.value.length > 0) {
-      // Try to go to right, else left
       const newIndex = Math.min(index, documents.value.length - 1)
       activeDocId.value = documents.value[newIndex].id
     } else {
       activeDocId.value = null
+    }
+  }
+}
+
+const handleSaveConfirm = async () => {
+  if (fileToCloseId.value) {
+    const doc = documents.value.find(d => d.id === fileToCloseId.value)
+    if (doc) {
+      const originalActiveId = activeDocId.value
+      activeDocId.value = doc.id
+      
+      await saveFile()
+      
+      if (doc.isModified) {
+         showSaveConfirm.value = false
+         isAppClosing.value = false 
+         return 
+      }
+    }
+    forceCloseFile(fileToCloseId.value)
+  }
+  resetConfirmState()
+  checkAppClose()
+}
+
+const handleDiscardConfirm = () => {
+  if (fileToCloseId.value) {
+    forceCloseFile(fileToCloseId.value)
+  }
+  resetConfirmState()
+  checkAppClose()
+}
+
+const handleCancelConfirm = () => {
+  resetConfirmState()
+  isAppClosing.value = false
+}
+
+const resetConfirmState = () => {
+  showSaveConfirm.value = false
+  fileToCloseId.value = null
+}
+
+const checkAppClose = () => {
+  if (isAppClosing.value) {
+    const nextModified = documents.value.find(d => d.isModified)
+    if (nextModified) {
+      fileToCloseId.value = nextModified.id
+      showSaveConfirm.value = true
+    } else {
+      getCurrentWindow().close()
     }
   }
 }
@@ -374,11 +463,60 @@ useIntervalFn(() => {
   })
 }, 5 * 60 * 1000)
 
-// Export & Print
-const exportHtml = async () => {
+// Export
+const exportDocument = async (format?: 'pdf' | 'html') => {
   if (!activeDocument.value) return
   
-  const md = new MarkdownIt({ html: true })
+  const title = activeDocument.value.title.replace(/\.(md|markdown)$/i, '') || 'Untitled'
+  
+  const filters = []
+  if (format === 'pdf') {
+    filters.push({ name: 'PDF', extensions: ['pdf'] })
+  } else if (format === 'html') {
+    filters.push({ name: 'HTML', extensions: ['html'] })
+  } else {
+    filters.push({ name: 'PDF', extensions: ['pdf'] })
+    filters.push({ name: 'HTML', extensions: ['html'] })
+  }
+
+  try {
+    const selected = await save({
+      filters,
+      defaultPath: title
+    })
+    
+    if (selected) {
+      if (selected.endsWith('.pdf')) {
+        await exportToPdf(selected)
+      } else if (selected.endsWith('.html')) {
+        await exportToHtml(selected)
+      }
+    }
+  } catch (error) {
+    console.error('Export failed:', error)
+    await message(`Export failed: ${error}`, { title: 'Error', kind: 'error' })
+  }
+}
+
+const exportToHtml = async (path: string) => {
+  if (!activeDocument.value) return
+  
+  const md = new MarkdownIt({
+    html: true,
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return '<pre class="hljs"><code>' +
+                 hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                 '</code></pre>';
+        } catch (__) {}
+      }
+
+      return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+    }
+  })
+    .use(markdownItFootnote)
+    .use(markdownItTaskLists)
   const htmlBody = md.render(activeDocument.value.content)
   const title = activeDocument.value.title
   
@@ -386,27 +524,37 @@ const exportHtml = async () => {
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
 <style>
+${githubMarkdownCss}
+
+/* Highlight.js Styles */
+${hljsGithubCss}
+
+@media (prefers-color-scheme: dark) {
+  ${hljsGithubDarkCss}
+}
+
+.markdown-body {
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 45px;
+}
+
+@media (max-width: 767px) {
+  .markdown-body {
+    padding: 15px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
   body {
-    box-sizing: border-box;
-    min-width: 200px;
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 45px;
+    background-color: #0d1117;
   }
-  @media (max-width: 767px) {
-    body {
-      padding: 15px;
-    }
-  }
-  @media (prefers-color-scheme: dark) {
-    body {
-      background-color: #0d1117;
-      color: #c9d1d9;
-    }
-  }
+}
 </style>
 </head>
 <body class="markdown-body">
@@ -414,17 +562,127 @@ ${htmlBody}
 </body>
 </html>`
 
-  try {
-    const selected = await save({
-      filters: [{ name: 'HTML', extensions: ['html'] }],
-      defaultPath: (title.replace(/\.(md|markdown)$/i, '') || 'Untitled') + '.html'
-    })
-    
-    if (selected) {
-      await writeTextFile(selected, htmlContent)
+  await writeTextFile(path, htmlContent)
+}
+
+const exportToPdf = async (path: string) => {
+  if (!activeDocument.value) return
+  
+  const md = new MarkdownIt({
+    html: true,
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return '<pre class="hljs"><code>' +
+                 hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                 '</code></pre>';
+        } catch (__) {}
+      }
+
+      return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
     }
+  })
+    .use(markdownItFootnote)
+    .use(markdownItTaskLists)
+  const htmlBody = md.render(activeDocument.value.content)
+  const title = activeDocument.value.title
+  
+  // Create a temporary container for PDF generation
+  const container = document.createElement('div')
+  container.className = 'markdown-body'
+  container.style.width = '100%'
+  container.style.maxWidth = '800px' // A4 width approx
+  container.style.margin = '0 auto'
+  container.innerHTML = htmlBody
+  
+  // Create a wrapper to hold styles and container
+  const wrapper = document.createElement('div')
+  wrapper.appendChild(container)
+  
+  // Add styles
+  const style = document.createElement('style')
+  style.innerHTML = `
+    ${githubMarkdownLightCss}
+    
+    /* Highlight.js Styles */
+    ${hljsGithubCss.replace(/\.hljs/g, '.markdown-body .hljs')}
+    
+    /* Ensure text is visible on white background */
+    .markdown-body { 
+      color: #24292f; 
+      background-color: #ffffff;
+      font-size: 12px; 
+      line-height: 1.5; 
+    }
+    h1 { page-break-before: always; }
+    h1:first-child { page-break-before: avoid; }
+    pre { page-break-inside: avoid; }
+    blockquote { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+    img { max-width: 100%; page-break-inside: avoid; }
+  `
+  wrapper.appendChild(style)
+  
+  // Options for html2pdf
+  const opt = {
+    margin: [15, 15, 15, 15], // mm
+    filename: title + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      logging: false,
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  }
+
+  // Save current scroll position
+  const scrollPos = window.scrollY
+
+  // Mount to DOM to ensure styles are computed correctly
+  wrapper.style.position = 'absolute'
+  wrapper.style.left = '0'
+  wrapper.style.top = '0'
+  wrapper.style.zIndex = '2147483647' // Max z-index to ensure visibility
+  wrapper.style.backgroundColor = '#ffffff'
+  wrapper.style.width = '800px' // Ensure fixed width for PDF generation
+  wrapper.style.minHeight = '100vh' // Ensure minimum height
+  document.body.appendChild(wrapper)
+
+  try {
+    // Scroll to top to ensure html2canvas captures from the beginning
+    window.scrollTo(0, 0)
+    
+    // Small delay to ensure rendering and scroll completion
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    const worker = html2pdf().from(wrapper).set(opt).toPdf().get('pdf').then((pdf: any) => {
+      const totalPages = pdf.internal.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i)
+        pdf.setFontSize(10)
+        pdf.setTextColor(150)
+        
+        // Header: Title
+        pdf.text(title, 15, 10)
+        
+        // Footer: Page Number
+        pdf.text(`Page ${i} of ${totalPages}`, 190, 287, { align: 'right' })
+      }
+    }).output('arraybuffer')
+    
+    const buffer = await worker
+    await writeFile(path, new Uint8Array(buffer))
+    
   } catch (err) {
-    console.error(err)
+    throw err
+  } finally {
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper)
+    }
+    // Restore scroll position
+    window.scrollTo(0, scrollPos)
   }
 }
 
@@ -483,7 +741,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       case 'e':
         if (e.shiftKey) {
           e.preventDefault();
-          exportHtml();
+          exportDocument();
         }
         break;
       case 'w': e.preventDefault(); if(activeDocId.value) closeFile(activeDocId.value); break;
@@ -538,9 +796,11 @@ onMounted(async () => {
         case 'file-open-folder': openFolder(); break;
         case 'file-save': saveFile(); break;
         case 'file-save-as': saveAsFile(); break;
-        case 'file-close': if(activeDocId.value) closeFile(activeDocId.value); break;
+        case 'file-export-pdf': exportDocument('pdf'); break;
+        case 'file-export-html': exportDocument('html'); break;
+        case 'file-close': if (activeDocId.value) closeFile(activeDocId.value); break;
         case 'view-toggle-sidebar': showSidebar.value = !showSidebar.value; break;
-        case 'view-toggle-outline': showOutline.value = !showOutline.value; break;
+        case 'view-toggle-outline': toggleOutline(); break;
         case 'view-toggle-preview': showPreview.value = !showPreview.value; break;
         case 'view-toggle-theme': toggleDark(); break;
         case 'view-toggle-focus': isFocusMode.value = !isFocusMode.value; break;
@@ -551,11 +811,22 @@ onMounted(async () => {
 
   // Update menu language
   updateMenuLanguage(t)
+
+  // Listen for window close request
+  unlistenCloseRequest.value = await getCurrentWindow().onCloseRequested(async (event) => {
+    const hasModified = documents.value.some(d => d.isModified)
+    if (hasModified) {
+      event.preventDefault()
+      isAppClosing.value = true
+      checkAppClose()
+    }
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   if (unlistenMenu) unlistenMenu()
+  if (unlistenCloseRequest.value) unlistenCloseRequest.value()
 })
 </script>
 
@@ -622,17 +893,25 @@ onUnmounted(() => {
         </button>
         
         <!-- Recent Files Dropdown Trigger -->
-        <div class="relative group">
-           <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex items-center gap-1" :title="t('toolbar.recentFiles')">
+        <div class="relative" ref="recentFilesRef">
+           <button 
+             class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex items-center gap-1" 
+             :class="{ 'bg-gray-200 dark:bg-gray-700': showRecentFiles }"
+             :title="t('toolbar.recentFiles')"
+             @click="showRecentFiles = !showRecentFiles"
+           >
             <div class="i-carbon-time text-lg"></div>
           </button>
-          <div class="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded shadow-lg hidden group-hover:block z-50">
+          <div 
+            v-if="showRecentFiles"
+            class="absolute top-full left-0 mt-1 min-w-64 w-auto max-w-[80vw] bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50"
+          >
             <div v-if="recentFiles.length === 0" class="p-2 text-sm text-gray-500">{{ t('toolbar.noRecentFiles') }}</div>
             <div 
               v-for="file in recentFiles" 
               :key="file"
-              class="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer truncate"
-              @click="loadFile(file)"
+              class="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer whitespace-nowrap"
+              @click="loadFile(file); showRecentFiles = false"
             >
               {{ file }}
             </div>
@@ -647,7 +926,7 @@ onUnmounted(() => {
         <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="showPreview ? t('toolbar.hidePreview') : t('toolbar.showPreview')" @click="showPreview = !showPreview">
           <div :class="showPreview ? 'i-carbon-open-panel-filled-right' : 'i-carbon-open-panel-right'" class="text-lg"></div>
         </button>
-        <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :class="{ 'bg-gray-200 dark:bg-gray-700': showOutline }" :title="showOutline ? t('toolbar.hideOutline') : t('toolbar.showOutline')" @click="showOutline = !showOutline">
+        <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :class="{ 'bg-gray-200 dark:bg-gray-700': showOutline }" :title="showOutline ? t('toolbar.hideOutline') : t('toolbar.showOutline')" @click="toggleOutline()">
           <div class="i-carbon-tree-view-alt text-lg"></div>
         </button>
          <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.focusMode')" @click="isFocusMode = true">
@@ -667,26 +946,57 @@ onUnmounted(() => {
 
     <!-- Main Area with Sidebars -->
     <div class="flex-1 flex overflow-hidden">
-      <!-- Left Sidebar (File Tree) -->
+      <!-- Left Sidebar (File Tree & Outline) -->
       <aside 
-        v-if="currentFolder && !isFocusMode && showSidebar" 
+        v-if="!isFocusMode && showSidebar && (currentFolder || showOutline)" 
         class="border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-[#252526] shrink-0"
         :style="{ width: `${sidebarWidth}px` }"
       >
-         <div class="p-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
-            <span class="truncate" :title="currentFolder">{{ currentFolder.split(/[\\/]/).pop() }}</span>
-            <button class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" @click="currentFolder = null" :title="t('toolbar.closeFolder')">
-              <div class="i-carbon-close"></div>
-            </button>
+         <!-- Files Section -->
+         <div 
+           v-if="currentFolder" 
+           class="flex flex-col min-h-0 transition-[flex-grow] duration-200" 
+           :class="[showFiles ? 'flex-1' : 'flex-none']"
+         >
+            <div 
+              class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#333333] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
+              @click="showFiles = !showFiles"
+            >
+               <div class="i-carbon-chevron-right transform transition-transform text-gray-500" :class="{ 'rotate-90': showFiles }"></div>
+               <span class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 flex-1 truncate" :title="currentFolder">{{ currentFolder.split(/[\\/]/).pop() }}</span>
+               <div class="flex items-center">
+                 <button class="p-0.5 hover:bg-gray-300 dark:hover:bg-gray-600 rounded" @click.stop="currentFolder = null" :title="t('toolbar.closeFolder')">
+                    <div class="i-carbon-close text-xs"></div>
+                 </button>
+               </div>
+            </div>
+            <div v-show="showFiles" class="flex-1 overflow-y-auto custom-scrollbar">
+               <FileTree :path="currentFolder" @file-click="(path) => loadFile(path)" />
+            </div>
          </div>
-         <div class="flex-1 overflow-y-auto custom-scrollbar">
-            <FileTree :path="currentFolder" @file-click="(path) => loadFile(path)" />
+
+         <!-- Outline Section -->
+         <div 
+            class="flex flex-col min-h-0 border-t border-gray-200 dark:border-gray-700 transition-[flex-grow] duration-200" 
+            :class="[showOutline ? 'flex-1' : 'flex-none']"
+         >
+            <div 
+              class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#333333] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
+              @click="showOutline = !showOutline"
+            >
+               <div class="i-carbon-chevron-right transform transition-transform text-gray-500" :class="{ 'rotate-90': showOutline }"></div>
+               <span class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{{ t('menu.toggleOutline') }}</span>
+            </div>
+            <div v-show="showOutline" class="flex-1 overflow-hidden">
+               <Outline v-if="activeDocument" :content="activeDocument.content" @jump="(line) => scrollToLine = line" />
+               <div v-else class="text-sm text-gray-400 p-4 text-center">{{ t('outline.noActiveFile') || 'No active file' }}</div>
+            </div>
          </div>
       </aside>
 
       <!-- Sidebar Resizer -->
       <div 
-        v-if="currentFolder && !isFocusMode && showSidebar"
+        v-if="!isFocusMode && showSidebar && (currentFolder || showOutline)"
         class="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 cursor-col-resize z-20 shrink-0"
         @mousedown="startSidebarResize"
       ></div>
@@ -727,6 +1037,7 @@ onUnmounted(() => {
             <Preview 
               :content="activeDocument.content" 
               :cursor-line="activeDocument.cursorLine"
+              @link-click="handleLinkClick"
             />
           </div>
         </div>
@@ -754,24 +1065,6 @@ onUnmounted(() => {
           <div class="i-carbon-minimize text-lg"></div>
         </button>
       </div>
-
-      <!-- Right Sidebar (Outline) -->
-      <div 
-        v-if="activeDocument && !isFocusMode && showOutline"
-        class="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 cursor-col-resize z-20 shrink-0"
-        @mousedown="startOutlineResize"
-      ></div>
-
-      <aside 
-        v-if="activeDocument && !isFocusMode && showOutline" 
-        class="border-l border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-[#1e1e1e] shrink-0"
-        :style="{ width: `${outlineWidth}px` }"
-      >
-         <div class="p-2 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
-            {{ t('menu.toggleOutline') }}
-         </div>
-         <Outline :content="activeDocument.content" @jump="(line) => scrollToLine = line" />
-      </aside>
     </div>
     
     <!-- Status Bar -->
@@ -788,6 +1081,14 @@ onUnmounted(() => {
       :show="showSettings" 
       @close="showSettings = false"
     />
+    
+    <SaveConfirmModal 
+      :show="showSaveConfirm"
+      :file-name="documents.find(d => d.id === fileToCloseId)?.title || 'Untitled'"
+      @save="handleSaveConfirm"
+      @discard="handleDiscardConfirm"
+      @cancel="handleCancelConfirm"
+    />
   </div>
 </template>
 
@@ -797,6 +1098,23 @@ body {
   padding: 0;
   overflow: hidden;
 }
+
+/* Dark Theme for Highlight.js */
+.dark .hljs { color: #c9d1d9; background: #0d1117 }
+.dark .hljs-doctag, .dark .hljs-keyword, .dark .hljs-meta .hljs-keyword, .dark .hljs-template-tag, .dark .hljs-template-variable, .dark .hljs-type, .dark .hljs-variable.language_ { color: #ff7b72 }
+.dark .hljs-title, .dark .hljs-title.class_, .dark .hljs-title.class_.inherited__, .dark .hljs-title.function_ { color: #d2a8ff }
+.dark .hljs-attr, .dark .hljs-attribute, .dark .hljs-literal, .dark .hljs-meta, .dark .hljs-number, .dark .hljs-operator, .dark .hljs-variable, .dark .hljs-selector-attr, .dark .hljs-selector-class, .dark .hljs-selector-id { color: #79c0ff }
+.dark .hljs-regexp, .dark .hljs-string, .dark .hljs-meta .hljs-string { color: #a5d6ff }
+.dark .hljs-built_in, .dark .hljs-symbol { color: #ffa657 }
+.dark .hljs-comment, .dark .hljs-code, .dark .hljs-formula { color: #8b949e }
+.dark .hljs-name, .dark .hljs-quote, .dark .hljs-selector-tag, .dark .hljs-selector-pseudo { color: #7ee787 }
+.dark .hljs-subst { color: #c9d1d9 }
+.dark .hljs-section { color: #1f6feb; font-weight: bold }
+.dark .hljs-bullet { color: #f2cc60 }
+.dark .hljs-emphasis { color: #c9d1d9; font-style: italic }
+.dark .hljs-strong { color: #c9d1d9; font-weight: bold }
+.dark .hljs-addition { color: #aff5b4; background-color: #033a16 }
+.dark .hljs-deletion { color: #ffdcd7; background-color: #67060c }
 
 @media print {
   .flex-col {

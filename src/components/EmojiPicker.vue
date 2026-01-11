@@ -21,7 +21,7 @@ const currentEmojis = computed(() => {
 </script>
 
 <template>
-  <div ref="target" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-80 flex flex-col overflow-hidden">
+  <div ref="target" class="bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-[450px] flex flex-col overflow-hidden">
     <!-- Header/Tabs -->
     <div class="flex items-center overflow-x-auto p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1e1e1e] scrollbar-hide">
       <button
@@ -37,7 +37,7 @@ const currentEmojis = computed(() => {
     </div>
 
     <!-- Emoji Grid -->
-    <div class="p-2 h-64 overflow-y-auto grid grid-cols-8 gap-1 custom-scrollbar">
+    <div class="p-2 h-64 overflow-y-auto grid grid-cols-12 gap-1 custom-scrollbar">
       <button
         v-for="emoji in currentEmojis"
         :key="emoji"

@@ -8,11 +8,18 @@ import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import deflist from 'markdown-it-deflist'
 import { computed, watch, ref } from 'vue'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import 'github-markdown-css/github-markdown.css'
+// @ts-ignore
+import hljs from 'highlight.js'
 
 const props = defineProps<{
   content: string
   cursorLine?: number
+}>()
+
+const emit = defineEmits<{
+  (e: 'link-click', href: string): void
 }>()
 
 // Plugin to add data-line attribute
@@ -30,7 +37,18 @@ const injectLineNumbers = (md: MarkdownIt) => {
 const md = new MarkdownIt({
   html: true,
   linkify: true,
-  typographer: true
+  typographer: true,
+  highlight: function (str, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return '<pre class="hljs"><code>' +
+               hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+               '</code></pre>';
+      } catch (__) {}
+    }
+
+    return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+  }
 })
   .use(injectLineNumbers)
   .use(taskLists)
@@ -102,6 +120,34 @@ const scrollToCursor = (newLine: number) => {
     }
   }
 }
+
+const handleClick = async (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const link = target.closest('a')
+  
+  if (link) {
+    const href = link.getAttribute('href')
+    if (href) {
+      // Check if it's an external link
+      const isExternal = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')
+      
+      // Check if it's a markdown file
+      const isMarkdown = href.endsWith('.md') || href.endsWith('.markdown')
+      
+      if (!isExternal && isMarkdown) {
+        event.preventDefault()
+        emit('link-click', href)
+      } else if (isExternal) {
+        event.preventDefault()
+        try {
+          await openUrl(href)
+        } catch (error) {
+          console.error('Failed to open external link:', error)
+        }
+      }
+    }
+  }
+}
 </script>
 
 <template>
@@ -109,6 +155,7 @@ const scrollToCursor = (newLine: number) => {
     <div 
       class="markdown-body p-8 min-h-full"
       v-html="html"
+      @click="handleClick"
     ></div>
   </div>
 </template>

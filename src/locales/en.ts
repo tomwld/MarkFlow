@@ -6,6 +6,8 @@ export default {
     openFolder: 'Open Folder',
     save: 'Save',
     saveAs: 'Save As',
+    exportPdf: 'Export to PDF',
+    exportHtml: 'Export to HTML',
     close: 'Close',
     recent: 'Recent Files',
     exit: 'Exit',
@@ -65,6 +67,8 @@ export default {
     saveError: 'Failed to save file',
     openError: 'Failed to open file',
     unsavedChanges: 'You have unsaved changes. Do you want to save them?',
+    saveChanges: 'Save Changes',
+    saveChangesMessage: 'Do you want to save the changes you made to "{file}"?',
     save: 'Save',
     dontSave: 'Don\'t Save',
     cancel: 'Cancel'
@@ -82,5 +86,9 @@ export default {
     lines: 'Lines',
     ln: 'Ln',
     col: 'Col'
+  },
+  outline: {
+    noHeadings: 'No headings',
+    noActiveFile: 'No active file'
   }
 }

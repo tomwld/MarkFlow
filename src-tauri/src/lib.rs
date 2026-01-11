@@ -10,6 +10,8 @@ struct MenuLabels {
     open_folder: String,
     save: String,
     save_as: String,
+    export_pdf: String,
+    export_html: String,
     close: String,
     quit: String,
     edit: String,
@@ -39,6 +41,8 @@ impl Default for MenuLabels {
             open_folder: "Open Folder".into(),
             save: "Save".into(),
             save_as: "Save As".into(),
+            export_pdf: "Export to PDF".into(),
+            export_html: "Export to HTML".into(),
             close: "Close".into(),
             quit: "Quit".into(),
             edit: "Edit".into(),
@@ -68,11 +72,13 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let open_folder_i = MenuItem::with_id(handle, "file-open-folder", &labels.open_folder, true, Some("CmdOrCtrl+Shift+O"))?;
     let save_i = MenuItem::with_id(handle, "file-save", &labels.save, true, Some("CmdOrCtrl+S"))?;
     let save_as_i = MenuItem::with_id(handle, "file-save-as", &labels.save_as, true, Some("CmdOrCtrl+Shift+S"))?;
+    let export_pdf_i = MenuItem::with_id(handle, "file-export-pdf", &labels.export_pdf, true, None::<&str>)?;
+    let export_html_i = MenuItem::with_id(handle, "file-export-html", &labels.export_html, true, None::<&str>)?;
     let close_i = MenuItem::with_id(handle, "file-close", &labels.close, true, Some("CmdOrCtrl+W"))?;
     let quit_i = PredefinedMenuItem::quit(handle, Some(&labels.quit))?;
     
     let file_menu = Submenu::with_items(handle, &labels.file, true, &[
-        &new_i, &open_i, &open_folder_i, &save_i, &save_as_i, &close_i, &quit_i
+        &new_i, &open_i, &open_folder_i, &save_i, &save_as_i, &export_pdf_i, &export_html_i, &close_i, &quit_i
     ])?;
 
     // Edit Menu

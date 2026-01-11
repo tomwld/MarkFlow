@@ -9,6 +9,8 @@ export const updateMenuLanguage = async (t: Composer['t']) => {
     openFolder: t('menu.openFolder'),
     save: t('menu.save'),
     saveAs: t('menu.saveAs'),
+    exportPdf: t('menu.exportPdf'),
+    exportHtml: t('menu.exportHtml'),
     close: t('menu.close'),
     quit: t('menu.exit'),
     edit: t('menu.edit'),

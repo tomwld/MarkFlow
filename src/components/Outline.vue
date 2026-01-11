@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import OutlineItem from './OutlineItem.vue'
 
 const props = defineProps<{
   content: string
@@ -13,27 +14,70 @@ interface Heading {
   level: number
   text: string
   line: number
+  children: Heading[]
+  expanded: boolean
+  id: string
+}
+
+// Map to store expansion state by ID (text + level)
+const expandedState = ref<Record<string, boolean>>({})
+
+const toggleExpand = (id: string) => {
+  if (expandedState.value[id] === undefined) {
+    expandedState.value[id] = false // If it was implicitly true, set to false
+  } else {
+    expandedState.value[id] = !expandedState.value[id]
+  }
 }
 
 const headings = computed(() => {
   if (!props.content) return []
   
-  const result: Heading[] = []
-  const lines = props.content.split('\n')
+  const root: Heading[] = []
+  const stack: Heading[] = []
+  
+  const lines = props.content.split(/\r?\n/)
+  let inCodeBlock = false
   
   lines.forEach((line, index) => {
+    // Check for code block boundaries
+    if (line.match(/^\s{0,3}(`{3,}|~{3,})/)) {
+      inCodeBlock = !inCodeBlock
+      return
+    }
+    
+    if (inCodeBlock) return
+
     // Match headers # to ######
-    const match = line.match(/^(#{1,6})\s+(.+)$/)
+    const match = line.match(/^\s{0,3}(#{1,6})\s+(.+)$/)
     if (match) {
-      result.push({
-        level: match[1].length,
-        text: match[2].trim(),
-        line: index + 1
-      })
+      const level = match[1].length
+      const text = match[2].trim()
+      const id = `${level}-${text}` // Use level-text as ID for persistence
+      
+      const node: Heading = {
+        level,
+        text,
+        line: index + 1,
+        children: [],
+        expanded: expandedState.value[id] ?? true, // Default to expanded
+        id
+      }
+
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        stack.pop()
+      }
+
+      if (stack.length === 0) {
+        root.push(node)
+      } else {
+        stack[stack.length - 1].children.push(node)
+      }
+      stack.push(node)
     }
   })
   
-  return result
+  return root
 })
 
 const handleJump = (line: number) => {
@@ -42,20 +86,19 @@ const handleJump = (line: number) => {
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto py-2">
+  <div class="h-full overflow-y-auto py-2 custom-scrollbar">
     <div v-if="headings.length === 0" class="text-sm text-gray-400 p-4 text-center">
-      No headings
+      {{ $t ? $t('outline.noHeadings') : 'No headings' }}
     </div>
     
-    <div 
-      v-for="(heading, i) in headings" 
-      :key="i"
-      class="px-3 py-1 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 truncate transition-colors duration-150"
-      :style="{ paddingLeft: `${(heading.level - 1) * 12 + 12}px` }"
-      @click="handleJump(heading.line)"
-      :title="heading.text"
-    >
-      {{ heading.text }}
+    <div class="px-2">
+      <OutlineItem 
+        v-for="(heading, i) in headings" 
+        :key="i"
+        :heading="heading"
+        @jump="handleJump"
+        @toggle="toggleExpand"
+      />
     </div>
   </div>
 </template>

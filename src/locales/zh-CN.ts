@@ -6,6 +6,8 @@ export default {
     openFolder: '打开文件夹',
     save: '保存',
     saveAs: '另存为',
+    exportPdf: '导出为 PDF',
+    exportHtml: '导出为 HTML',
     close: '关闭',
     recent: '最近打开',
     exit: '退出',
@@ -65,6 +67,8 @@ export default {
     saveError: '保存文件失败',
     openError: '打开文件失败',
     unsavedChanges: '文件未保存，是否保存更改？',
+    saveChanges: '保存更改',
+    saveChangesMessage: '是否保存对 "{file}" 的更改？',
     save: '保存',
     dontSave: '不保存',
     cancel: '取消'
@@ -82,5 +86,9 @@ export default {
     lines: '行数',
     ln: '行',
     col: '列'
+  },
+  outline: {
+    noHeadings: '无标题',
+    noActiveFile: '无活动文件'
   }
 }
