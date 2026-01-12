@@ -82,6 +82,7 @@ struct MenuLabels {
     settings: String,
     help: String,
     about: String,
+    markdown_syntax: String,
 }
 
 impl Default for MenuLabels {
@@ -113,6 +114,7 @@ impl Default for MenuLabels {
             settings: "Settings".into(),
             help: "Help".into(),
             about: "About".into(),
+            markdown_syntax: "Markdown Syntax".into(),
         }
     }
 }
@@ -183,9 +185,11 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let view_menu = Submenu::with_items(handle, &labels.view, true, &view_items)?;
 
     // Help Menu
+    let markdown_syntax_i = MenuItem::with_id(handle, "help-markdown-syntax", &labels.markdown_syntax, true, None::<&str>)?;
     let about_i = MenuItem::with_id(handle, "help-about", &labels.about, true, None::<&str>)?;
     
     let help_menu = Submenu::with_items(handle, &labels.help, true, &[
+        &markdown_syntax_i,
         &about_i
     ])?;
 

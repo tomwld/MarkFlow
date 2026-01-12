@@ -26,7 +26,8 @@ export default {
     toggleFocus: '切换专注模式',
     settings: '设置',
     help: '帮助',
-    about: '关于'
+    about: '关于',
+    markdownSyntax: 'Markdown 语法'
   },
   toolbar: {
     newFile: '新建文件',

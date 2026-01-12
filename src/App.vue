@@ -21,9 +21,13 @@ import { useFileWatcher } from './composables/useFileWatcher'
 import { useAppLifecycle } from './composables/useAppLifecycle'
 import { useShortcuts } from './composables/useShortcuts'
 import { updateMenuLanguage } from './utils/menu'
+// @ts-ignore
+import markdownHelpEn from './assets/markdown-en.md?raw'
+// @ts-ignore
+import markdownHelpZh from './assets/markdown-zh.md?raw'
 
 // Composables
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
 
@@ -76,6 +80,18 @@ let unlistenCloseRequest: UnlistenFn | null = null
 
 const showAbout = async () => {
     await message('MarkFlow v0.1.0\nA modern Markdown editor built with Tauri and Vue.', { title: 'About MarkFlow', kind: 'info' })
+}
+
+const openMarkdownSyntax = () => {
+    newFile()
+    if (activeDocument.value) {
+        const title = locale.value === 'zh-CN' ? 'Markdown 语法' : 'Markdown Syntax'
+        const content = locale.value === 'zh-CN' ? markdownHelpZh : markdownHelpEn
+        
+        activeDocument.value.title = title
+        activeDocument.value.content = content
+        activeDocument.value.isModified = false
+    }
 }
 
 // Watchers
@@ -147,6 +163,7 @@ onMounted(async () => {
         case 'view-toggle-theme': toggleDark(); break; 
         case 'view-toggle-focus': isFocusMode.value = !isFocusMode.value; break;
         case 'view-settings': showSettings.value = true; break;
+        case 'help-markdown-syntax': openMarkdownSyntax(); break;
         case 'help-about': showAbout(); break;
     }
   })

@@ -26,7 +26,8 @@ export default {
     toggleFocus: 'Toggle Focus Mode',
     settings: 'Settings',
     help: 'Help',
-    about: 'About'
+    about: 'About',
+    markdownSyntax: 'Markdown Syntax'
   },
   toolbar: {
     newFile: 'New File',

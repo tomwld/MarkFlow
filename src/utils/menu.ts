@@ -29,6 +29,7 @@ export const updateMenuLanguage = async (t: Composer['t']) => {
     settings: t('menu.settings'),
     help: t('menu.help'),
     about: t('menu.about'),
+    markdownSyntax: t('menu.markdownSyntax'),
   }
   
   try {
