@@ -113,6 +113,12 @@ const onEmojiSelect = (emoji: string) => {
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertCodeBlock')" @click="insertMarkdown('codeblock')">
         <div class="i-carbon-code text-lg"></div>
       </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertLink')" @click="insertMarkdown('link')">
+        <div class="i-carbon-link text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertImage')" @click="insertMarkdown('image')">
+        <div class="i-carbon-image text-lg"></div>
+      </button>
 
       <div class="relative">
         <button 

@@ -39,6 +39,9 @@ create table sys_role {
   * 引用区块（>）
     > 这是一个引用，来自哪里哪里
   * 链接（[text](https://chat.qwen.ai/c/url)）与图片
+
+    [百度](https://www.baidu.com)
+    ![美女](https://ts1.tc.mm.bing.net/th/id/OIP-C.rAzIUHScvAJZYEnsOYB3oAHaNK?rs=1&pid=ImgDetMain&o=7&rm=3)
   * 水平线（---、\*\*\*）
   * 表格（符合GitHub Flavored Markdown标准）
     

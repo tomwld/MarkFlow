@@ -88,6 +88,8 @@ struct MenuLabels {
     insert_footnote: String,
     insert_task_list: String,
     insert_code_block: String,
+    insert_link: String,
+    insert_image: String,
     insert_emoji: String,
 }
 
@@ -125,9 +127,11 @@ impl Default for MenuLabels {
             insert_table: "Table".into(),
             insert_footnote: "Footnote".into(),
             insert_task_list: "Task List".into(),
-            insert_code_block: "Code Block".into(),
-            insert_emoji: "Emoji".into(),
-        }
+    insert_code_block: "Code Block".into(),
+    insert_link: "Link".into(),
+    insert_image: "Image".into(),
+    insert_emoji: "Emoji".into(),
+}
     }
 }
 
@@ -183,6 +187,8 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let insert_footnote_i = MenuItem::with_id(handle, "insert-footnote", &labels.insert_footnote, true, Some("CmdOrCtrl+Alt+F"))?;
     let insert_tasklist_i = MenuItem::with_id(handle, "insert-tasklist", &labels.insert_task_list, true, Some("CmdOrCtrl+Alt+L"))?;
     let insert_codeblock_i = MenuItem::with_id(handle, "insert-codeblock", &labels.insert_code_block, true, Some("CmdOrCtrl+Alt+C"))?;
+    let insert_link_i = MenuItem::with_id(handle, "insert-link", &labels.insert_link, true, Some("CmdOrCtrl+K"))?;
+    let insert_image_i = MenuItem::with_id(handle, "insert-image", &labels.insert_image, true, Some("CmdOrCtrl+Shift+I"))?;
     let insert_emoji_i = MenuItem::with_id(handle, "insert-emoji", &labels.insert_emoji, true, Some("CmdOrCtrl+Alt+E"))?;
 
     let insert_items: Vec<&dyn IsMenuItem<Wry>> = vec![
@@ -190,6 +196,8 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
         &insert_footnote_i,
         &insert_tasklist_i,
         &insert_codeblock_i,
+        &insert_link_i,
+        &insert_image_i,
         &insert_emoji_i,
     ];
 

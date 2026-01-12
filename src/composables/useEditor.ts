@@ -18,7 +18,7 @@ export function useEditor() {
     insertText(emoji)
   }
 
-  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock') => {
+  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock' | 'link' | 'image') => {
     if (!editorRef.value) return
 
     let text = ''
@@ -44,6 +44,12 @@ export function useEditor() {
         break
       case 'codeblock':
         text = '\n```language\ncode\n```\n'
+        break
+      case 'link':
+        text = '[Link text](url)'
+        break
+      case 'image':
+        text = '![Alt text](url)'
         break
     }
     
