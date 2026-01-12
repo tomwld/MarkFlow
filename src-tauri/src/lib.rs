@@ -1,4 +1,4 @@
-use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
+use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem, IsMenuItem};
 use tauri::{Emitter, AppHandle, Wry, Manager};
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
@@ -130,9 +130,21 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     // Use custom MenuItem for Quit to handle unsaved changes
     let quit_i = MenuItem::with_id(handle, "file-quit", &labels.quit, true, None::<&str>)?;
     
-    let file_menu = Submenu::with_items(handle, &labels.file, true, &[
-        &new_i, &open_i, &open_folder_i, &save_i, &save_as_i, &export_pdf_i, &export_html_i, &close_i, &quit_i
-    ])?;
+    let sep = PredefinedMenuItem::separator(handle)?;
+
+    let file_items: Vec<&dyn IsMenuItem<Wry>> = vec![
+        &new_i, &open_i, &open_folder_i, 
+        &sep,
+        &save_i, &save_as_i, 
+        &sep,
+        &export_pdf_i, &export_html_i, 
+        &sep,
+        &close_i, 
+        &sep,
+        &quit_i
+    ];
+
+    let file_menu = Submenu::with_items(handle, &labels.file, true, &file_items)?;
 
     // Edit Menu
     let undo_i = PredefinedMenuItem::undo(handle, Some(&labels.undo))?;
@@ -142,9 +154,15 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let paste_i = PredefinedMenuItem::paste(handle, Some(&labels.paste))?;
     let select_all_i = PredefinedMenuItem::select_all(handle, Some(&labels.select_all))?;
     
-    let edit_menu = Submenu::with_items(handle, &labels.edit, true, &[
-        &undo_i, &redo_i, &cut_i, &copy_i, &paste_i, &select_all_i
-    ])?;
+    let edit_items: Vec<&dyn IsMenuItem<Wry>> = vec![
+        &undo_i, &redo_i,
+        &sep,
+        &cut_i, &copy_i, &paste_i,
+        &sep,
+        &select_all_i
+    ];
+
+    let edit_menu = Submenu::with_items(handle, &labels.edit, true, &edit_items)?;
     
     // View Menu
     let toggle_sidebar_i = MenuItem::with_id(handle, "view-toggle-sidebar", &labels.toggle_sidebar, true, Some("CmdOrCtrl+B"))?;
@@ -154,9 +172,15 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let focus_i = MenuItem::with_id(handle, "view-toggle-focus", &labels.toggle_focus, true, None::<&str>)?;
     let settings_i = MenuItem::with_id(handle, "view-settings", &labels.settings, true, Some("CmdOrCtrl+,"))?;
     
-    let view_menu = Submenu::with_items(handle, &labels.view, true, &[
-        &toggle_sidebar_i, &toggle_outline_i, &preview_i, &theme_i, &focus_i, &settings_i
-    ])?;
+    let view_items: Vec<&dyn IsMenuItem<Wry>> = vec![
+        &toggle_sidebar_i, &toggle_outline_i, &preview_i,
+        &sep,
+        &theme_i, &focus_i,
+        &sep,
+        &settings_i
+    ];
+
+    let view_menu = Submenu::with_items(handle, &labels.view, true, &view_items)?;
 
     // Help Menu
     let about_i = MenuItem::with_id(handle, "help-about", &labels.about, true, None::<&str>)?;
