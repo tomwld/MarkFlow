@@ -46,18 +46,18 @@ const style = computed(() => {
     <div 
       v-if="visible"
       ref="menuRef"
-      class="fixed z-50 bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded shadow-lg py-1 min-w-40 text-sm select-none"
+      class="fixed z-50 bg-white dark:bg-[#21252b] border border-gray-200 dark:border-[#181a1f] rounded shadow-lg py-1 min-w-40 text-sm select-none"
       :style="style"
       @contextmenu.prevent
     >
       <template v-for="(item, index) in items" :key="index">
-        <div v-if="item.separator" class="h-px bg-gray-200 dark:bg-gray-700 my-1 mx-2"></div>
+        <div v-if="item.separator" class="h-px bg-gray-200 dark:bg-[#181a1f] my-1 mx-2"></div>
         <div 
           v-else
-          class="px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 mx-1 rounded"
+          class="px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2c313a] mx-1 rounded"
           :class="[
             item.disabled ? 'opacity-50 cursor-not-allowed' : '',
-            item.danger ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
+            item.danger ? 'text-red-500' : 'text-gray-700 dark:text-[#abb2bf]'
           ]"
           @click="!item.disabled && (item.action(), emit('update:visible', false), emit('close'))"
         >

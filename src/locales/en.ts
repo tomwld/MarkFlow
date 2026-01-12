@@ -110,8 +110,26 @@ export default {
     people: 'People & Body',
     animals: 'Animals & Nature',
     food: 'Food & Drink',
+    travel: 'Travel & Places',
+    activities: 'Activities',
     objects: 'Objects',
-    symbols: 'Symbols'
+    symbols: 'Symbols',
+    flags: 'Flags'
+  },
+  search: {
+    goToLine: 'Go to line',
+    go: 'Go',
+    find: 'Find',
+    replace: 'Replace',
+    next: 'Next',
+    previous: 'Previous',
+    all: 'All',
+    matchCase: 'Match case',
+    byWord: 'By word',
+    replaceAll: 'Replace all',
+    close: 'Close',
+    currentMatch: 'match',
+    onLine: 'on line'
   },
   status: {
     words: 'Words',

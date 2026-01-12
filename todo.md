@@ -2,15 +2,13 @@
 
 ## 1. 基础编辑体验
 
-* **实时预览**：真正的所见即所得编辑，实时预览
-
-* **双向同步**：Markdown源码与渲染内容实时同步，保持格式一致性
+* **实时预览，双向同步**：Markdown源码与渲染内容实时同步，保持格式一致性
 
 * **基本Markdown语法支持**：
 
   * 标题（# 至 ######）
   * 段落与换行
-  * 粗体（**text**）与斜体（_text_）
+  * 粗体（**text**，__text__）与斜体（_text_，*text*）,同时加粗斜体（***text***,___text___）
   * 无序列表（-、\*、+）与有序列表（1.）
     1. **项目1🐷**
     2. **项目2🐶**
@@ -22,7 +20,12 @@
     **其他的**
   * 代码块（\`\`\` language）与行内代码（`code`）
   * 
-    
+  这是一行
+这是第二行
+这是第三行
+
+  段落1
+
 ```sql
 let a = 10
 type User {
@@ -36,8 +39,24 @@ create table sys_role {
   desc varchar(1000)
 }
 ```
+
+```java
+package com.wuld.escort;
+
+@Data
+public class Person {
+  private String name;
+  private Long id;
+  private Integer age;
+  private Date birthday;
+}
+```
+
   * 引用区块（>）
     > 这是一个引用，来自哪里哪里
+    >> 嵌套引用
+    >>>更深的嵌套
+    >>>>再一层嵌套
   * 链接（[text](https://chat.qwen.ai/c/url)）与图片
 
     [百度](https://www.baidu.com)
@@ -52,7 +71,7 @@ create table sys_role {
 | Cell 31  | Cell 32  |         |
 
   * 脚注（\[^1]）
-[^1]三尺剑，[^2]六钧弓。人间清暑殿[^3]，人间广寒宫[^4]。两岸晓烟杨柳绿[^5]，一园春雨杏花红[^6]。
+[^1]三尺剑，[^2]六钧[^7]弓。人间清暑殿[^3]，人间广寒宫[^4]。两岸晓烟杨柳绿[^5]，一园春雨杏花红[^6]。
 
 [^4]: 人间广寒宫：嫦娥居所
 
@@ -150,3 +169,5 @@ create table sys_role {
 [^5]: 两岸晓烟
 
 [^6]: 医院春雨
+
+[^7]: 钧：古代计量单位，三十斤为一钧。

@@ -1,7 +1,7 @@
 # MarkFlow
 
 <div align="center">
-  <img src="./public/tauri.svg" alt="MarkFlow Logo" width="120" />
+  <img src="./app-icon.svg" alt="MarkFlow Logo" width="120" />
   <p>A modern, lightweight, and feature-rich Markdown editor built with Tauri, Vue 3, and TypeScript.</p>
 
   **English** | [简体中文](./README_zh-CN.md)
@@ -46,11 +46,13 @@
 | `Ctrl/Cmd + Alt + H` | Export to HTML |
 | `Ctrl/Cmd + B` | Toggle Sidebar |
 | `Ctrl/Cmd + Alt + B` | Toggle Outline |
-| `Ctrl/Cmd + Alt + E` | Open Emoji Picker |
-| `Ctrl/Cmd + Alt + T` | Insert Table |
+| `Ctrl/Cmd + E` | Open Emoji Picker |
+| `Ctrl/Cmd + T` | Insert Table |
 | `Ctrl/Cmd + Alt + F` | Insert Footnote |
-| `Ctrl/Cmd + Alt + L` | Insert Task List |
+| `Ctrl/Cmd + L` | Insert Task List |
 | `Ctrl/Cmd + Alt + C` | Insert Code Block |
+| `Ctrl/Cmd + K` | Insert Link |
+| `Ctrl/Cmd + I` | Insert Image |
 | `F11` | Toggle Focus Mode |
 
 ## 🛠️ Tech Stack

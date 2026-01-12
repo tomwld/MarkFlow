@@ -39,6 +39,7 @@ const md: MarkdownIt = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
+  breaks: true,
   highlight: function (str: string, lang: string): string {
     if (lang && hljs.getLanguage(lang)) {
       try {
@@ -166,10 +167,10 @@ const handleClick = async (event: MouseEvent) => {
       // Check if it's an external link
       const isExternal = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')
       
-      // Check if it's a markdown file
-      const isMarkdown = href.endsWith('.md') || href.endsWith('.markdown')
+      // Check if it's an anchor link
+      const isAnchor = href.startsWith('#')
       
-      if (!isExternal && isMarkdown) {
+      if (!isExternal && !isAnchor) {
         event.preventDefault()
         emit('link-click', href)
       } else if (isExternal) {
@@ -186,7 +187,7 @@ const handleClick = async (event: MouseEvent) => {
 </script>
 
 <template>
-  <div ref="containerRef" class="h-full w-full overflow-y-auto bg-white dark:bg-[#0d1117] scroll-smooth">
+  <div ref="containerRef" class="h-full w-full overflow-y-auto bg-white dark:bg-[#282c34] scroll-smooth">
     <div 
       class="markdown-body p-8 min-h-full"
       v-html="html"
@@ -227,7 +228,7 @@ const handleClick = async (event: MouseEvent) => {
 
 /* Dark mode overrides for markdown-body */
 :global(.dark) .markdown-body {
-  color: #ffffff !important;
+  color: #abb2bf !important;
   /* Improve text rendering in dark mode */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -235,7 +236,7 @@ const handleClick = async (event: MouseEvent) => {
 }
 
 :global(.dark) .markdown-body a {
-  color: #58a6ff !important;
+  color: #61afef !important;
 }
 
 :global(.dark) .markdown-body h1,
@@ -244,40 +245,44 @@ const handleClick = async (event: MouseEvent) => {
 :global(.dark) .markdown-body h4,
 :global(.dark) .markdown-body h5,
 :global(.dark) .markdown-body h6 {
-  color: #ffffff !important;
-  border-bottom-color: #21262d;
+  color: #e5c07b !important;
+  border-bottom-color: #3e4451;
 }
 
 :global(.dark) .markdown-body blockquote {
-  color: #8b949e;
-  border-left-color: #30363d;
+  color: #5c6370;
+  border-left-color: #3e4451;
 }
 
 :global(.dark) .markdown-body table tr {
-  background-color: #0d1117;
-  border-top-color: #21262d;
+  background-color: #282c34;
+  border-top-color: #3e4451;
 }
 
 :global(.dark) .markdown-body table tr:nth-child(2n) {
-  background-color: #161b22;
+  background-color: #21252b;
 }
 
 :global(.dark) .markdown-body table th,
 :global(.dark) .markdown-body table td {
-  border-color: #30363d;
+  border-color: #3e4451;
 }
 
 :global(.dark) .markdown-body hr {
-  background-color: #30363d;
+  background-color: #3e4451;
 }
 
 :global(.dark) .markdown-body code,
 :global(.dark) .markdown-body tt {
-  background-color: rgba(110,118,129,0.4); 
+  background-color: rgba(171, 178, 191, 0.1); 
+}
+
+:global(.dark) .markdown-body pre code {
+  background-color: transparent;
 }
 
 :global(.dark) .markdown-body pre {
-  background-color: #161b22;
+  background-color: #21252b;
 }
 
 /* Ensure code blocks look good with atom-one-dark */
@@ -290,9 +295,9 @@ const handleClick = async (event: MouseEvent) => {
 /* Force override for dark mode text color using CSS variables and !important */
 /* We use a non-scoped block to ensure specificity wins over github-markdown-css */
 .dark .markdown-body {
-  --fgColor-default: #ffffff !important;
-  --color-fg-default: #ffffff !important;
-  color: #ffffff !important;
+  --fgColor-default:#abb2bf !important;
+  --color-fg-default: #abb2bf !important;
+  color: #abb2bf !important;
 }
 
 .dark .markdown-body h1,
@@ -301,7 +306,7 @@ const handleClick = async (event: MouseEvent) => {
 .dark .markdown-body h4,
 .dark .markdown-body h5,
 .dark .markdown-body h6 {
-  color: #ffffff !important;
+  color: #abb2bf !important;
   border-bottom-color: #21262d;
 }
 
@@ -310,35 +315,39 @@ const handleClick = async (event: MouseEvent) => {
 }
 
 .dark .markdown-body .footnotes {
-  color: #ffffff !important;
+  color: #abb2bf !important;
   border-top-color: #30363d !important;
 }
 
 .dark .markdown-body .footnotes ol li {
-  color: #ffffff !important;
+  color: #abb2bf !important;
 }
 
 .dark .markdown-body table tr {
-  background-color: #0d1117 !important;
-  border-top-color: #21262d !important;
+  background-color: #282c34 !important;
+  border-top-color: #3e4451 !important;
 }
 
 .dark .markdown-body table tr:nth-child(2n) {
-  background-color: #161b22 !important;
+  background-color: #21252b !important;
 }
 
 .dark .markdown-body table th,
 .dark .markdown-body table td {
-  border-color: #30363d !important;
+  border-color: #3e4451 !important;
 }
 
 .dark .markdown-body pre {
-  background-color: #161b22 !important;
-  border: 1px solid #30363d !important;
+  background-color: #21252b !important;
+  border: 1px solid #181a1f !important;
 }
 
 .dark .markdown-body code,
 .dark .markdown-body tt {
-  background-color: rgba(110,118,129,0.4) !important;
+  background-color: rgba(171, 178, 191, 0.1) !important;
+}
+
+.dark .markdown-body pre code {
+  background-color: transparent !important;
 }
 </style>

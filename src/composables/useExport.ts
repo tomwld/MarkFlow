@@ -29,6 +29,7 @@ export function useExport() {
     
     const md: MarkdownIt = new MarkdownIt({
       html: true,
+      breaks: true,
       highlight: function (str: string, lang: string): string {
         if (lang && hljs.getLanguage(lang)) {
           try {
@@ -96,6 +97,7 @@ ${htmlBody}
     
     const md: MarkdownIt = new MarkdownIt({
       html: true,
+      breaks: true,
       highlight: function (str: string, lang: string): string {
         if (lang && hljs.getLanguage(lang)) {
           try {

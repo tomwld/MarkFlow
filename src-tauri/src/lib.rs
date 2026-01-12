@@ -20,7 +20,6 @@ fn get_startup_file(state: tauri::State<StartupFile>) -> Option<String> {
 #[tauri::command]
 fn watch_file(app: AppHandle, path: String, state: tauri::State<WatcherState>) -> Result<(), String> {
     let app_handle = app.clone();
-    let path_clone = path.clone();
     
     let mut watcher_guard = state.watcher.lock().map_err(|e| e.to_string())?;
     
@@ -135,11 +134,11 @@ impl Default for MenuLabels {
             insert_table: "Table".into(),
             insert_footnote: "Footnote".into(),
             insert_task_list: "Task List".into(),
-    insert_code_block: "Code Block".into(),
-    insert_link: "Link".into(),
-    insert_image: "Image".into(),
-    insert_emoji: "Emoji".into(),
-}
+            insert_code_block: "Code Block".into(),
+            insert_link: "Link".into(),
+            insert_image: "Image".into(),
+            insert_emoji: "Emoji".into(),
+        }
     }
 }
 
@@ -191,13 +190,13 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let edit_menu = Submenu::with_items(handle, &labels.edit, true, &edit_items)?;
 
     // Insert Menu
-    let insert_table_i = MenuItem::with_id(handle, "insert-table", &labels.insert_table, true, Some("CmdOrCtrl+Alt+T"))?;
+    let insert_table_i = MenuItem::with_id(handle, "insert-table", &labels.insert_table, true, Some("CmdOrCtrl+T"))?;
     let insert_footnote_i = MenuItem::with_id(handle, "insert-footnote", &labels.insert_footnote, true, Some("CmdOrCtrl+Alt+F"))?;
-    let insert_tasklist_i = MenuItem::with_id(handle, "insert-tasklist", &labels.insert_task_list, true, Some("CmdOrCtrl+Alt+L"))?;
+    let insert_tasklist_i = MenuItem::with_id(handle, "insert-tasklist", &labels.insert_task_list, true, Some("CmdOrCtrl+L"))?;
     let insert_codeblock_i = MenuItem::with_id(handle, "insert-codeblock", &labels.insert_code_block, true, Some("CmdOrCtrl+Alt+C"))?;
     let insert_link_i = MenuItem::with_id(handle, "insert-link", &labels.insert_link, true, Some("CmdOrCtrl+K"))?;
-    let insert_image_i = MenuItem::with_id(handle, "insert-image", &labels.insert_image, true, Some("CmdOrCtrl+Shift+I"))?;
-    let insert_emoji_i = MenuItem::with_id(handle, "insert-emoji", &labels.insert_emoji, true, Some("CmdOrCtrl+Alt+E"))?;
+    let insert_image_i = MenuItem::with_id(handle, "insert-image", &labels.insert_image, true, Some("CmdOrCtrl+I"))?;
+    let insert_emoji_i = MenuItem::with_id(handle, "insert-emoji", &labels.insert_emoji, true, Some("CmdOrCtrl+E"))?;
 
     let insert_items: Vec<&dyn IsMenuItem<Wry>> = vec![
         &insert_table_i,
@@ -216,7 +215,7 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let toggle_outline_i = MenuItem::with_id(handle, "view-toggle-outline", &labels.toggle_outline, true, Some("CmdOrCtrl+Alt+B"))?;
     let preview_i = MenuItem::with_id(handle, "view-toggle-preview", &labels.toggle_preview, true, Some("CmdOrCtrl+P"))?;
     let theme_i = MenuItem::with_id(handle, "view-toggle-theme", &labels.toggle_theme, true, None::<&str>)?;
-    let focus_i = MenuItem::with_id(handle, "view-toggle-focus", &labels.toggle_focus, true, None::<&str>)?;
+    let focus_i = MenuItem::with_id(handle, "view-toggle-focus", &labels.toggle_focus, true, Some("F11"))?;
     let settings_i = MenuItem::with_id(handle, "view-settings", &labels.settings, true, Some("CmdOrCtrl+,"))?;
     
     let view_items: Vec<&dyn IsMenuItem<Wry>> = vec![

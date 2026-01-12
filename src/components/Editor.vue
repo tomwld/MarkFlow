@@ -3,10 +3,12 @@ import { Codemirror } from 'vue-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete'
+import { search, searchKeymap } from '@codemirror/search'
 import { ref, watch, computed } from 'vue'
 import { useDark } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
-import { EditorView, ViewUpdate } from '@codemirror/view'
+import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
+import { EditorState } from '@codemirror/state'
 import { 
   parseTable, formatTable, addRow, deleteRow, addColumn, deleteColumn, getColumnIndex, isTableLine 
 } from '../utils/table'
@@ -90,6 +92,24 @@ const extensions = computed(() => {
   const exts = [
     markdown(), 
     autocompletion({ override: [codeBlockLanguageCompletion] }),
+    search(),
+    keymap.of(searchKeymap),
+    EditorState.phrases.of({
+      "Go to line": t('search.goToLine'),
+      "go": t('search.go'),
+      "Find": t('search.find'),
+      "Replace": t('search.replace'),
+      "next": t('search.next'),
+      "previous": t('search.previous'),
+      "all": t('search.all'),
+      "match case": t('search.matchCase'),
+      "by word": t('search.byWord'),
+      "replace": t('search.replace'),
+      "replace all": t('search.replaceAll'),
+      "close": t('search.close'),
+      "current match": t('search.currentMatch'),
+      "on line": t('search.onLine')
+    }),
     EditorView.updateListener.of((update: ViewUpdate) => {
       if (update.selectionSet) {
         const state = update.state
@@ -307,7 +327,7 @@ const toggleTaskStatus = (completed: boolean) => {
   <div class="h-full w-full overflow-hidden text-base relative" @contextmenu="handleContextMenu" @click="closeContextMenu">
     <Codemirror
       v-model="code"
-      placeholder="Start typing..."
+      :placeholder="t('editor.placeholder')"
       :style="{ height: '100%', fontSize: '14px' }"
       :autofocus="true"
       :indent-with-tab="true"

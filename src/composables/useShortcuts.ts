@@ -60,34 +60,36 @@ export function useShortcuts() {
           }
           break;
         case 'e':
-          if (e.altKey) {
-            e.preventDefault();
-            showEmojiPicker.value = true;
-          }
+          e.preventDefault();
+          showEmojiPicker.value = true;
           break;
         case 't':
-          if (e.altKey) {
-            e.preventDefault();
-            insertMarkdown('table');
-          }
+          e.preventDefault();
+          insertMarkdown('table');
           break;
         case 'f':
-          if (e.altKey) {
+          if (e.altKey && e.ctrlKey) {
             e.preventDefault();
             insertMarkdown('footnote');
           }
           break;
         case 'l':
-          if (e.altKey) {
-            e.preventDefault();
-            insertMarkdown('tasklist');
-          }
+          e.preventDefault();
+          insertMarkdown('tasklist');
           break;
         case 'c':
-          if (e.altKey) {
+          if (e.altKey && e.ctrlKey) {
             e.preventDefault();
             insertMarkdown('codeblock');
           }
+          break;
+        case 'k':
+          e.preventDefault();
+          insertMarkdown('link');
+          break;
+        case 'i':
+          e.preventDefault();
+          insertMarkdown('image');
           break;
         case 'b':
           if (e.altKey) {

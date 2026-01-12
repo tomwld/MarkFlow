@@ -1,7 +1,7 @@
 # MarkFlow
 
 <div align="center">
-  <img src="./public/tauri.svg" alt="MarkFlow Logo" width="120" />
+  <img src="./app-icon.svg" alt="MarkFlow Logo" width="120" />
   <p>一个基于 Tauri、Vue 3 和 TypeScript 构建的现代、轻量且功能丰富的 Markdown 编辑器。</p>
   
   [English](./README.md) | **简体中文**
@@ -46,11 +46,13 @@
 | `Ctrl/Cmd + Alt + H` | 导出 HTML |
 | `Ctrl/Cmd + B` | 切换侧边栏 |
 | `Ctrl/Cmd + Alt + B` | 切换大纲 |
-| `Ctrl/Cmd + Alt + E` | 表情选择器 |
-| `Ctrl/Cmd + Alt + T` | 插入表格 |
+| `Ctrl/Cmd + E` | 表情选择器 |
+| `Ctrl/Cmd + T` | 插入表格 |
 | `Ctrl/Cmd + Alt + F` | 插入脚注 |
-| `Ctrl/Cmd + Alt + L` | 插入任务列表 |
+| `Ctrl/Cmd + L` | 插入任务列表 |
 | `Ctrl/Cmd + Alt + C` | 插入代码块 |
+| `Ctrl/Cmd + K` | 插入链接 |
+| `Ctrl/Cmd + I` | 插入图片 |
 | `F11` | 切换专注模式 |
 
 ## 🛠️ 技术栈

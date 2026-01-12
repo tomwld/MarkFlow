@@ -115,7 +115,7 @@ watch(() => props.path, async () => {
     <!-- Directory Header (only for non-root depth) -->
     <div 
       v-if="depth !== 0"
-      class="flex items-center gap-1 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-300"
+      class="flex items-center gap-1 py-1 px-2 hover:bg-gray-100 dark:hover:bg-[#2c313a] cursor-pointer text-gray-700 dark:text-[#abb2bf]"
       :style="{ paddingLeft: `${(depth || 0) * 12 + 8}px` }"
       @click="toggle"
       @contextmenu.prevent.stop="handleHeaderContextMenu"
@@ -141,7 +141,7 @@ watch(() => props.path, async () => {
         <!-- File (Markdown only) -->
         <div 
           v-else-if="isMarkdown(entry.name)"
-          class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-600 dark:text-gray-400"
+          class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-[#2c313a] cursor-pointer text-gray-600 dark:text-[#abb2bf]"
           :style="{ paddingLeft: `${(depth || 0) * 12 + (depth === 0 ? 8 : 20)}px` }"
           @click="handleFileClick(entry)"
           @contextmenu.prevent.stop="handleContextMenu($event, entry)"

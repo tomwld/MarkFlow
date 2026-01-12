@@ -106,12 +106,30 @@ export default {
     no: '否'
   },
   emoji: {
-    smileys: '表情与情感',
-    people: '人物与身体',
-    animals: '动物与自然',
-    food: '食物与饮料',
+    smileys: '表情 & 情感',
+    people: '人物 & 身体',
+    animals: '动物 & 自然',
+    food: '食物 & 饮料',
+    travel: '旅行 & 地点',
+    activities: '活动',
     objects: '物体',
-    symbols: '符号'
+    symbols: '符号',
+    flags: '旗帜'
+  },
+  search: {
+    goToLine: '跳转到行',
+    go: '跳转',
+    find: '查找',
+    replace: '替换',
+    next: '下一个',
+    previous: '上一个',
+    all: '全部',
+    matchCase: '区分大小写',
+    byWord: '全字匹配',
+    replaceAll: '全部替换',
+    close: '关闭',
+    currentMatch: '当前匹配',
+    onLine: '行'
   },
   status: {
     words: '字数',

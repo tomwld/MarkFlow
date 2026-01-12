@@ -150,7 +150,7 @@ const { newFile, openFile, openFolder } = useFileOperations()
     <!-- Left Sidebar (File Tree & Outline) -->
     <aside 
       v-if="!isFocusMode && showSidebar && (currentFolder || showOutline)" 
-      class="border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-[#252526] shrink-0"
+      class="border-r border-gray-200 dark:border-[#181a1f] flex flex-col bg-gray-50 dark:bg-[#21252b] shrink-0"
       :style="{ width: `${sidebarWidth}px` }"
     >
        <!-- Files Section -->
@@ -160,7 +160,7 @@ const { newFile, openFile, openFolder } = useFileOperations()
          :class="[showFiles ? 'flex-1' : 'flex-none']"
        >
           <div 
-            class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#333333] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
+            class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#282c34] cursor-pointer hover:bg-gray-200 dark:hover:bg-[#2c313a] transition-colors border-b border-gray-200 dark:border-[#181a1f]"
             @click="showFiles = !showFiles"
             @contextmenu.prevent="currentFolder && handleFileContextMenu($event, currentFolder, true)"
           >
@@ -184,11 +184,11 @@ const { newFile, openFile, openFolder } = useFileOperations()
 
        <!-- Outline Section -->
        <div 
-          class="flex flex-col min-h-0 border-t border-gray-200 dark:border-gray-700 transition-[flex-grow] duration-200" 
+          class="flex flex-col min-h-0 border-t border-gray-200 dark:border-[#181a1f] transition-[flex-grow] duration-200" 
           :class="[showOutline ? 'flex-1' : 'flex-none']"
        >
           <div 
-            class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#333333] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
+            class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#282c34] cursor-pointer hover:bg-gray-200 dark:hover:bg-[#2c313a] transition-colors border-b border-gray-200 dark:border-[#181a1f]"
             @click="showOutline = !showOutline"
           >
              <div class="i-carbon-chevron-right transform transition-transform text-gray-500" :class="{ 'rotate-90': showOutline }"></div>
@@ -238,7 +238,7 @@ const { newFile, openFile, openFolder } = useFileOperations()
         <!-- Preview Pane -->
         <div 
           v-if="showPreview"
-          class="h-full bg-white dark:bg-[#0d1117] overflow-hidden"
+          class="h-full bg-white dark:bg-[#282c34] overflow-hidden"
           :style="{ width: `${100 - editorWidth}%` }"
         >
           <Preview 
