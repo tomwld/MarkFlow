@@ -44,6 +44,11 @@ export default {
     deleteRow: '删除行',
     deleteColumn: '删除列'
   },
+  taskList: {
+    actions: '任务列表操作',
+    markAsCompleted: '标记为已完成',
+    markAsUncompleted: '标记为未完成'
+  },
   toolbar: {
     newFile: '新建文件',
     openFile: '打开文件',

@@ -282,8 +282,7 @@ const handleClick = async (event: MouseEvent) => {
 
 /* Ensure code blocks look good with atom-one-dark */
 :deep(.hljs) {
-  background: transparent !important;
-  padding: 0;
+  padding: 1rem !important;
 }
 </style>
 
@@ -331,5 +330,15 @@ const handleClick = async (event: MouseEvent) => {
 .dark .markdown-body table th,
 .dark .markdown-body table td {
   border-color: #30363d !important;
+}
+
+.dark .markdown-body pre {
+  background-color: #161b22 !important;
+  border: 1px solid #30363d !important;
+}
+
+.dark .markdown-body code,
+.dark .markdown-body tt {
+  background-color: rgba(110,118,129,0.4) !important;
 }
 </style>

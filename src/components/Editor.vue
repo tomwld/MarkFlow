@@ -228,6 +228,11 @@ defineExpose({
 const contextMenuVisible = ref(false)
 const contextMenuX = ref(0)
 const contextMenuY = ref(0)
+const contextMenuType = ref<'table' | 'taskList' | null>(null)
+
+const isTaskListLine = (text: string) => {
+  return /^(\s*[-*+]\s+)\[([ xX])\]/.test(text)
+}
 
 const handleContextMenu = (e: MouseEvent) => {
   if (!view.value) return;
@@ -247,17 +252,53 @@ const handleContextMenu = (e: MouseEvent) => {
     contextMenuX.value = e.clientX;
     contextMenuY.value = e.clientY;
     contextMenuVisible.value = true;
+    contextMenuType.value = 'table';
+  } else if (isTaskListLine(line.text)) {
+    e.preventDefault();
+    
+    // Move cursor to click position
+    view.value.dispatch({
+      selection: { anchor: pos, head: pos }
+    });
+
+    contextMenuX.value = e.clientX;
+    contextMenuY.value = e.clientY;
+    contextMenuVisible.value = true;
+    contextMenuType.value = 'taskList';
   } else {
     contextMenuVisible.value = false;
+    contextMenuType.value = null;
   }
 }
 
 const closeContextMenu = () => {
   contextMenuVisible.value = false;
+  contextMenuType.value = null;
 }
 
 const handleMenuAction = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertColumnLeft' | 'insertColumnRight' | 'deleteRow' | 'deleteColumn') => {
   editTable(action);
+  closeContextMenu();
+}
+
+const toggleTaskStatus = (completed: boolean) => {
+  if (!view.value) return;
+  
+  const state = view.value.state;
+  const selection = state.selection.main;
+  const line = state.doc.lineAt(selection.head);
+  const text = line.text;
+  
+  const match = text.match(/^(\s*[-*+]\s+)\[([ xX])\]/);
+  if (match) {
+    const prefix = match[1];
+    const newStatus = completed ? 'x' : ' ';
+    
+    const newLine = text.replace(/^(\s*[-*+]\s+)\[([ xX])\]/, `${prefix}[${newStatus}]`);
+    view.value.dispatch({
+      changes: { from: line.from, to: line.to, insert: newLine }
+    });
+  }
   closeContextMenu();
 }
 </script>
@@ -283,53 +324,73 @@ const handleMenuAction = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertC
       :style="{ left: `${contextMenuX}px`, top: `${contextMenuY}px` }"
       @click.stop
     >
-      <div class="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-semibold border-b border-gray-100 dark:border-gray-700 mb-1">
-        {{ t('table.actions') }}
-      </div>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
-        @click="handleMenuAction('insertRowAbove')"
-      >
-        <span>{{ t('table.insertRowAbove') }}</span>
-        <span class="text-xs text-gray-400">Ctrl+Alt+↑</span>
-      </button>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
-        @click="handleMenuAction('insertRowBelow')"
-      >
-        <span>{{ t('table.insertRowBelow') }}</span>
-        <span class="text-xs text-gray-400">Ctrl+Alt+↓</span>
-      </button>
-      <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
-        @click="handleMenuAction('insertColumnLeft')"
-      >
-        <span>{{ t('table.insertColumnLeft') }}</span>
-        <span class="text-xs text-gray-400">Ctrl+Alt+←</span>
-      </button>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
-        @click="handleMenuAction('insertColumnRight')"
-      >
-        <span>{{ t('table.insertColumnRight') }}</span>
-        <span class="text-xs text-gray-400">Ctrl+Alt+→</span>
-      </button>
-      <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-between group"
-        @click="handleMenuAction('deleteRow')"
-      >
-        <span>{{ t('table.deleteRow') }}</span>
-        <span class="text-xs text-red-300">Ctrl+Alt+-</span>
-      </button>
-      <button 
-        class="w-full text-left px-4 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-between group"
-        @click="handleMenuAction('deleteColumn')"
-      >
-        <span>{{ t('table.deleteColumn') }}</span>
-        <span class="text-xs text-red-300">Ctrl+Alt+=</span>
-      </button>
+      <template v-if="contextMenuType === 'table'">
+        <div class="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-semibold border-b border-gray-100 dark:border-gray-700 mb-1">
+          {{ t('table.actions') }}
+        </div>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="handleMenuAction('insertRowAbove')"
+        >
+          <span>{{ t('table.insertRowAbove') }}</span>
+          <span class="text-xs text-gray-400">Ctrl+Alt+↑</span>
+        </button>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="handleMenuAction('insertRowBelow')"
+        >
+          <span>{{ t('table.insertRowBelow') }}</span>
+          <span class="text-xs text-gray-400">Ctrl+Alt+↓</span>
+        </button>
+        <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="handleMenuAction('insertColumnLeft')"
+        >
+          <span>{{ t('table.insertColumnLeft') }}</span>
+          <span class="text-xs text-gray-400">Ctrl+Alt+←</span>
+        </button>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="handleMenuAction('insertColumnRight')"
+        >
+          <span>{{ t('table.insertColumnRight') }}</span>
+          <span class="text-xs text-gray-400">Ctrl+Alt+→</span>
+        </button>
+        <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-between group"
+          @click="handleMenuAction('deleteRow')"
+        >
+          <span>{{ t('table.deleteRow') }}</span>
+          <span class="text-xs text-red-300">Ctrl+Alt+-</span>
+        </button>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-between group"
+          @click="handleMenuAction('deleteColumn')"
+        >
+          <span>{{ t('table.deleteColumn') }}</span>
+          <span class="text-xs text-red-300">Ctrl+Alt+=</span>
+        </button>
+      </template>
+
+      <template v-if="contextMenuType === 'taskList'">
+         <div class="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-semibold border-b border-gray-100 dark:border-gray-700 mb-1">
+          {{ t('taskList.actions') }}
+        </div>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="toggleTaskStatus(true)"
+        >
+          <span>{{ t('taskList.markAsCompleted') }}</span>
+        </button>
+        <button 
+          class="w-full text-left px-4 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between group"
+          @click="toggleTaskStatus(false)"
+        >
+          <span>{{ t('taskList.markAsUncompleted') }}</span>
+        </button>
+      </template>
     </div>
   </div>
 </template>

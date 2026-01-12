@@ -44,6 +44,11 @@ export default {
     deleteRow: 'Delete Row',
     deleteColumn: 'Delete Column'
   },
+  taskList: {
+    actions: 'Task List Actions',
+    markAsCompleted: 'Mark as Completed',
+    markAsUncompleted: 'Mark as Uncompleted'
+  },
   toolbar: {
     newFile: 'New File',
     openFile: 'Open File',
