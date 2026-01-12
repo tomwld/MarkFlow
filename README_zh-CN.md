@@ -76,8 +76,8 @@
 
 1. 克隆仓库:
    ```bash
-   git clone https://github.com/yourusername/MarkFlow.git
-   cd MarkFlow
+   git clone https://gitee.com/tomwld/mark-flow.git
+   cd mark-flow
    ```
 
 2. 安装依赖:
