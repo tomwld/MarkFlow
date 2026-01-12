@@ -115,7 +115,7 @@ export function formatTable(table: Table): string {
   // Ensure separator line has at least 3 dashes
   if (table.separatorLineIndex !== -1) {
     const sepRow = table.rows[table.separatorLineIndex];
-    sepRow.cells.forEach((cell, i) => {
+    sepRow.cells.forEach((_cell, i) => {
        if (i < colCount) {
          colWidths[i] = Math.max(colWidths[i], 3);
        }

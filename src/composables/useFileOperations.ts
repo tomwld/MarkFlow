@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import { open, save, message } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core'
@@ -10,7 +9,6 @@ export function useFileOperations() {
   const { 
     documents, 
     activeDocument, 
-    activeDocId, 
     createDocument, 
     addDocument, 
     getDocumentByPath, 

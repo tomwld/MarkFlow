@@ -20,8 +20,7 @@ export function useShortcuts() {
   const { toggleOutline, showEmojiPicker, showSidebar, showPreview } = useLayout()
   
   const { 
-    exportDocument, 
-    printDoc 
+    exportDocument 
   } = useExport()
 
   const handleKeydown = (e: KeyboardEvent) => {

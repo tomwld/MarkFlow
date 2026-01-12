@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, ref, provide } from 'vue'
+import { onMounted, onUnmounted, watch, provide } from 'vue'
 import StatusBar from './components/StatusBar.vue'
 import TabBar from './components/TabBar.vue'
 import Toolbar from './components/Toolbar.vue'
@@ -152,6 +152,12 @@ onMounted(async () => {
 
   // Start File Watcher
   await startFileWatcher(t)
+
+  // Check for startup file (from file association or command line)
+  const startupFile = await invoke<string | null>('get_startup_file')
+  if (startupFile) {
+    await loadFile(startupFile)
+  }
 
   // Listen for Menu Events
   unlistenMenu = await listen('menu-event', (event) => {

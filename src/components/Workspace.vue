@@ -19,7 +19,6 @@ const {
   showOutline, 
   showFiles, 
   sidebarWidth, 
-  toggleOutline,
   startSidebarResize,
   startEditorResize
 } = useLayout()

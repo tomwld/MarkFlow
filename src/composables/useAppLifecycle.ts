@@ -10,7 +10,7 @@ const fileToCloseId = ref<string | null>(null)
 const isAppClosing = ref(false)
 
 export function useAppLifecycle() {
-  const { documents, activeDocId, setActiveDocument } = useDocuments()
+  const { documents, setActiveDocument } = useDocuments()
   const { saveFile, closeFile: forceCloseFileOp } = useFileOperations()
 
   const resetConfirmState = () => {

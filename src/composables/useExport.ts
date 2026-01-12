@@ -27,9 +27,9 @@ export function useExport() {
   const exportToHtml = async (path: string) => {
     if (!activeDocument.value) return
     
-    const md = new MarkdownIt({
+    const md: MarkdownIt = new MarkdownIt({
       html: true,
-      highlight: function (str, lang) {
+      highlight: function (str: string, lang: string): string {
         if (lang && hljs.getLanguage(lang)) {
           try {
             return '<pre class="hljs"><code>' +
@@ -94,9 +94,9 @@ ${htmlBody}
   const exportToPdf = async (path: string) => {
     if (!activeDocument.value) return
     
-    const md = new MarkdownIt({
+    const md: MarkdownIt = new MarkdownIt({
       html: true,
-      highlight: function (str, lang) {
+      highlight: function (str: string, lang: string): string {
         if (lang && hljs.getLanguage(lang)) {
           try {
             return '<pre class="hljs"><code>' +
@@ -143,11 +143,11 @@ ${htmlBody}
     wrapper.appendChild(style)
     
     const opt = {
-      margin: [15, 15, 15, 15],
+      margin: [15, 15, 15, 15] as [number, number, number, number],
       filename: title + '.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }
 
@@ -180,10 +180,10 @@ ${htmlBody}
           pdf.text(title, 15, 10)
           pdf.text(`Page ${i} of ${totalPages}`, 190, 287, { align: 'right' })
         }
-      }).output('arraybuffer')
+      }).then(() => html2pdf().from(wrapper).set(opt).output('arraybuffer'))
       
       const buffer = await worker
-      await writeFile(path, new Uint8Array(buffer))
+      await writeFile(path, new Uint8Array(buffer as ArrayBuffer))
       
     } catch (err) {
       throw err

@@ -9,6 +9,14 @@ struct WatcherState {
     watcher: Arc<Mutex<Option<RecommendedWatcher>>>,
 }
 
+struct StartupFile(Arc<Mutex<Option<String>>>);
+
+#[tauri::command]
+fn get_startup_file(state: tauri::State<StartupFile>) -> Option<String> {
+    let mut file = state.0.lock().unwrap();
+    file.take()
+}
+
 #[tauri::command]
 fn watch_file(app: AppHandle, path: String, state: tauri::State<WatcherState>) -> Result<(), String> {
     let app_handle = app.clone();
@@ -261,11 +269,24 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(WatcherState { watcher: Arc::new(Mutex::new(None)) })
+        .manage(StartupFile(Arc::new(Mutex::new(None))))
         .setup(|app| {
             let handle = app.handle();
             let labels = MenuLabels::default();
             let menu = build_menu(handle, &labels)?;
             app.set_menu(menu)?;
+
+            // Check command line arguments for file to open
+            let args: Vec<String> = std::env::args().collect();
+            if args.len() > 1 {
+                let path = args[1].clone();
+                // Simple check to ensure it's a file path and not a flag
+                if !path.starts_with("-") {
+                    let state = app.state::<StartupFile>();
+                    *state.0.lock().unwrap() = Some(path);
+                }
+            }
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -273,7 +294,7 @@ pub fn run() {
             // Emit event to frontend
              let _ = app.emit("menu-event", event_id);
         })
-        .invoke_handler(tauri::generate_handler![greet, update_menu, watch_file, unwatch_file, exit_app]);
+        .invoke_handler(tauri::generate_handler![greet, update_menu, watch_file, unwatch_file, exit_app, get_startup_file]);
 
 
     if let Err(err) = builder.run(tauri::generate_context!()) {
