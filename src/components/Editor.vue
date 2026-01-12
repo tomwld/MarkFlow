@@ -2,7 +2,9 @@
 import { Codemirror } from 'vue-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { ref, watch } from 'vue'
+import { autocompletion, CompletionContext } from '@codemirror/autocomplete'
+import { ref, watch, computed } from 'vue'
+import { useDark } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { EditorView, ViewUpdate } from '@codemirror/view'
 import { 
@@ -10,6 +12,27 @@ import {
 } from '../utils/table'
 
 const { t } = useI18n()
+
+const languages = [
+  "javascript", "typescript", "html", "css", "json", "java", "python", "c", "cpp", "csharp", 
+  "go", "rust", "php", "ruby", "shell", "bash", "sql", "xml", "yaml", "markdown", 
+  "dockerfile", "kotlin", "swift", "scala", "perl", "lua", "r", "dart", "objectivec", "vue"
+].map(lang => ({ label: lang, type: "keyword" }))
+
+const codeBlockLanguageCompletion = (context: CompletionContext) => {
+  let word = context.matchBefore(/^\s*```\w*/)
+  if (!word) return null
+  if (word.from == word.to && !context.explicit) return null
+  
+  // Find where ``` ends
+  const backtickIndex = word.text.indexOf('```')
+  if (backtickIndex === -1) return null
+
+  return {
+    from: word.from + backtickIndex + 3,
+    options: languages
+  }
+}
 
 const props = defineProps<{
   modelValue: string
@@ -61,18 +84,28 @@ watch(() => props.scrollToLine, (line) => {
   }
 })
 
-const extensions = [
-  markdown(), 
-  oneDark,
-  EditorView.updateListener.of((update: ViewUpdate) => {
-    if (update.selectionSet) {
-      const state = update.state
-      const offset = state.selection.main.head
-      const line = state.doc.lineAt(offset)
-      emit('cursor-change', line.number, offset - line.from + 1)
-    }
-  })
-]
+const isDark = useDark()
+
+const extensions = computed(() => {
+  const exts = [
+    markdown(), 
+    autocompletion({ override: [codeBlockLanguageCompletion] }),
+    EditorView.updateListener.of((update: ViewUpdate) => {
+      if (update.selectionSet) {
+        const state = update.state
+        const offset = state.selection.main.head
+        const line = state.doc.lineAt(offset)
+        emit('cursor-change', line.number, offset - line.from + 1)
+      }
+    })
+  ]
+
+  if (isDark.value) {
+    exts.push(oneDark)
+  }
+
+  return exts
+})
 
 // Local state to manage the editor content
 const code = ref(props.modelValue)

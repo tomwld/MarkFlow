@@ -1,5 +1,5 @@
 import { save, message } from '@tauri-apps/plugin-dialog'
-import { writeTextFile } from '@tauri-apps/plugin-fs'
+import { writeTextFile, writeFile } from '@tauri-apps/plugin-fs'
 import MarkdownIt from 'markdown-it'
 // @ts-ignore
 import markdownItFootnote from 'markdown-it-footnote'
@@ -183,7 +183,7 @@ ${htmlBody}
       }).output('arraybuffer')
       
       const buffer = await worker
-      await writeTextFile(path, new Uint8Array(buffer))
+      await writeFile(path, new Uint8Array(buffer))
       
     } catch (err) {
       throw err

@@ -224,4 +224,112 @@ const handleClick = async (event: MouseEvent) => {
   list-style-type: decimal;
   padding-left: 2em;
 }
+
+/* Dark mode overrides for markdown-body */
+:global(.dark) .markdown-body {
+  color: #ffffff !important;
+  /* Improve text rendering in dark mode */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:global(.dark) .markdown-body a {
+  color: #58a6ff !important;
+}
+
+:global(.dark) .markdown-body h1,
+:global(.dark) .markdown-body h2,
+:global(.dark) .markdown-body h3,
+:global(.dark) .markdown-body h4,
+:global(.dark) .markdown-body h5,
+:global(.dark) .markdown-body h6 {
+  color: #ffffff !important;
+  border-bottom-color: #21262d;
+}
+
+:global(.dark) .markdown-body blockquote {
+  color: #8b949e;
+  border-left-color: #30363d;
+}
+
+:global(.dark) .markdown-body table tr {
+  background-color: #0d1117;
+  border-top-color: #21262d;
+}
+
+:global(.dark) .markdown-body table tr:nth-child(2n) {
+  background-color: #161b22;
+}
+
+:global(.dark) .markdown-body table th,
+:global(.dark) .markdown-body table td {
+  border-color: #30363d;
+}
+
+:global(.dark) .markdown-body hr {
+  background-color: #30363d;
+}
+
+:global(.dark) .markdown-body code,
+:global(.dark) .markdown-body tt {
+  background-color: rgba(110,118,129,0.4); 
+}
+
+:global(.dark) .markdown-body pre {
+  background-color: #161b22;
+}
+
+/* Ensure code blocks look good with atom-one-dark */
+:deep(.hljs) {
+  background: transparent !important;
+  padding: 0;
+}
+</style>
+
+<style>
+/* Force override for dark mode text color using CSS variables and !important */
+/* We use a non-scoped block to ensure specificity wins over github-markdown-css */
+.dark .markdown-body {
+  --fgColor-default: #ffffff !important;
+  --color-fg-default: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.dark .markdown-body h1,
+.dark .markdown-body h2,
+.dark .markdown-body h3,
+.dark .markdown-body h4,
+.dark .markdown-body h5,
+.dark .markdown-body h6 {
+  color: #ffffff !important;
+  border-bottom-color: #21262d;
+}
+
+.dark .markdown-body a {
+  color: #58a6ff !important;
+}
+
+.dark .markdown-body .footnotes {
+  color: #ffffff !important;
+  border-top-color: #30363d !important;
+}
+
+.dark .markdown-body .footnotes ol li {
+  color: #ffffff !important;
+}
+
+.dark .markdown-body table tr {
+  background-color: #0d1117 !important;
+  border-top-color: #21262d !important;
+}
+
+.dark .markdown-body table tr:nth-child(2n) {
+  background-color: #161b22 !important;
+}
+
+.dark .markdown-body table th,
+.dark .markdown-body table td {
+  border-color: #30363d !important;
+}
 </style>

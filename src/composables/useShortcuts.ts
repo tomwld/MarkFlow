@@ -17,7 +17,7 @@ export function useShortcuts() {
   const { activeDocId } = useDocuments()
   const { closeFile } = useAppLifecycle()
   const { insertMarkdown, editTable } = useEditor()
-  const { toggleOutline, showEmojiPicker } = useLayout()
+  const { toggleOutline, showEmojiPicker, showSidebar, showPreview } = useLayout()
   
   const { 
     exportDocument, 
@@ -44,7 +44,7 @@ export function useShortcuts() {
             exportDocument('pdf');
           } else {
             e.preventDefault(); 
-            printDoc();
+            showPreview.value = !showPreview.value;
           }
           break;
         case 'h':
@@ -87,6 +87,9 @@ export function useShortcuts() {
           if (e.altKey) {
             e.preventDefault();
             toggleOutline();
+          } else {
+            e.preventDefault();
+            showSidebar.value = !showSidebar.value;
           }
           break;
         case 'arrowup':
