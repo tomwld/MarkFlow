@@ -30,11 +30,13 @@ const {
   toggleOutline 
 } = useLayout()
 
-const { insertMarkdown, insertEmoji } = useEditor()
+const { insertMarkdown, insertEmoji, toggleLinePrefix } = useEditor()
 
 const showEmojiPicker = ref(false)
 const showRecentFiles = ref(false)
 const recentFilesRef = ref(null)
+const showHeadingDropdown = ref(false)
+const headingDropdownRef = ref(null)
 
 // Sync with menu event
 watch(showEmojiPickerFromMenu, (val) => {
@@ -46,6 +48,10 @@ watch(showEmojiPickerFromMenu, (val) => {
 
 onClickOutside(recentFilesRef, () => {
   showRecentFiles.value = false
+})
+
+onClickOutside(headingDropdownRef, () => {
+  showHeadingDropdown.value = false
 })
 
 const onEmojiSelect = (emoji: string) => {
@@ -100,12 +106,59 @@ const onEmojiSelect = (emoji: string) => {
       
       <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
-      <!-- Group 2: Insert Tools -->
+      <!-- Group 2: Formatting -->
+      <div class="relative" ref="headingDropdownRef">
+        <button 
+          class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex items-center gap-1"
+          :class="{ 'bg-gray-200 dark:bg-gray-700': showHeadingDropdown }"
+          :title="t('toolbar.insertHeading')" 
+          @click="showHeadingDropdown = !showHeadingDropdown"
+        >
+          <div class="i-carbon-heading text-lg"></div>
+          <div class="i-carbon-chevron-down text-xs opacity-50"></div>
+        </button>
+        <div 
+          v-if="showHeadingDropdown"
+          class="absolute top-full left-0 mt-1 min-w-32 w-auto bg-white dark:bg-[#252526] border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 flex flex-col py-1"
+        >
+          <button 
+            v-for="i in 6" 
+            :key="i"
+            class="px-3 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer whitespace-nowrap flex items-center gap-2"
+            @click="toggleLinePrefix('#'.repeat(i) + ' '); showHeadingDropdown = false"
+          >
+            <span :class="`text-base font-bold`" :style="{ fontSize: `${1.5 - (i * 0.1)}rem` }">H{{ i }}</span>
+            <span>{{ t(`toolbar.heading${i}`) }}</span>
+          </button>
+        </div>
+      </div>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertBold')" @click="insertMarkdown('bold')">
+        <div class="i-carbon-text-bold text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertItalic')" @click="insertMarkdown('italic')">
+        <div class="i-carbon-text-italic text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertStrikethrough')" @click="insertMarkdown('strikethrough')">
+        <div class="i-carbon-text-strikethrough text-lg"></div>
+      </button>
+       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertQuote')" @click="insertMarkdown('quote')">
+        <div class="i-carbon-quotes text-lg"></div>
+      </button>
+       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertUnorderedList')" @click="insertMarkdown('unorderedList')">
+        <div class="i-carbon-list-bulleted text-lg"></div>
+      </button>
+       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertOrderedList')" @click="insertMarkdown('orderedList')">
+        <div class="i-carbon-list-numbered text-lg"></div>
+      </button>
+      
+      <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+
+      <!-- Group 3: Insert Tools -->
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertTable')" @click="insertMarkdown('table')">
         <div class="i-carbon-table text-lg"></div>
       </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertFootnote')" @click="insertMarkdown('footnote')">
-        <div class="i-carbon-quotes text-lg"></div>
+        <div class="i-carbon-bookmark text-lg"></div>
       </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertTaskList')" @click="insertMarkdown('tasklist')">
         <div class="i-carbon-checkbox-checked text-lg"></div>
@@ -139,7 +192,7 @@ const onEmojiSelect = (emoji: string) => {
     </div>
     
     <div class="flex items-center gap-2">
-        <!-- Group 3: View & Layout -->
+        <!-- Group 4: View & Layout -->
       <button 
         class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" 
         :class="{ 'bg-gray-200 dark:bg-gray-700': showSidebar }"
@@ -160,7 +213,7 @@ const onEmojiSelect = (emoji: string) => {
 
       <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
-      <!-- Group 4: Settings -->
+      <!-- Group 5: Settings -->
         <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="isDark ? t('toolbar.lightMode') : t('toolbar.darkMode')" @click="toggleDark()">
         <div :class="isDark ? 'i-carbon-moon' : 'i-carbon-sun'" class="text-lg"></div>
       </button>

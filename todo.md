@@ -20,11 +20,12 @@
     **其他的**
   * 代码块（\`\`\` language）与行内代码（`code`）
   * 
-  这是一行
-这是第二行
-这是第三行
+***这是一行***
+**这是第二行**
+~~这是第三行~~
 
-  段落1
+## 段落
+
 
 ```html
   <div class="flex items-center bg-gray-100 dark:bg-[#252526] border-b border-gray-200 dark:border-gray-700 overflow-x-auto no-scrollbar select-none">
@@ -185,6 +186,7 @@ public class Person {
 * 自定义代码块样式
 * 是的是的
 * 电费
+  1.
 
 
 [^5]: 两岸晓烟

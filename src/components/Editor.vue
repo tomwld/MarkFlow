@@ -181,6 +181,79 @@ const insertAtCursorAndEnd = (cursorText: string, endText: string) => {
   }
 }
 
+const toggleFormat = (prefix: string, suffix: string) => {
+  if (view.value) {
+    const state = view.value.state
+    const selection = state.selection.main
+    const from = selection.from
+    const to = selection.to
+    const text = state.sliceDoc(from, to)
+    
+    // Simple wrapping for now
+    // Ideally we should check if already wrapped and unwrap
+    // But basic requirement is just to add buttons
+    
+    // Check if already wrapped
+    const doc = state.doc
+    const before = doc.sliceString(from - prefix.length, from)
+    const after = doc.sliceString(to, to + suffix.length)
+    
+    if (before === prefix && after === suffix) {
+       // Unwrap
+       view.value.dispatch({
+        changes: { from: from - prefix.length, to: to + suffix.length, insert: text },
+        selection: { anchor: from - prefix.length, head: to - prefix.length },
+        scrollIntoView: true
+      })
+    } else {
+      // Wrap
+      view.value.dispatch({
+        changes: { from, to, insert: `${prefix}${text}${suffix}` },
+        selection: { 
+          anchor: from + prefix.length, 
+          head: to + prefix.length 
+        },
+        scrollIntoView: true
+      })
+    }
+  }
+}
+
+const toggleLinePrefix = (prefix: string) => {
+  if (view.value) {
+    const state = view.value.state
+    const selection = state.selection.main
+    const fromLine = state.doc.lineAt(selection.from)
+    const toLine = state.doc.lineAt(selection.to)
+    
+    let allHavePrefix = true
+    for (let i = fromLine.number; i <= toLine.number; i++) {
+        const line = state.doc.line(i)
+        if (!line.text.startsWith(prefix)) {
+            allHavePrefix = false
+            break
+        }
+    }
+    
+    const changes = []
+    for (let i = fromLine.number; i <= toLine.number; i++) {
+        const line = state.doc.line(i)
+        if (allHavePrefix) {
+             changes.push({ from: line.from, to: line.from + prefix.length, insert: '' })
+        } else {
+             if (!line.text.startsWith(prefix)) {
+                 changes.push({ from: line.from, to: line.from, insert: prefix })
+             }
+        }
+    }
+    
+    view.value.dispatch({
+      changes: changes,
+      scrollIntoView: true
+    })
+  }
+}
+
 const editTable = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertColumnLeft' | 'insertColumnRight' | 'deleteRow' | 'deleteColumn') => {
   if (!view.value) return;
   
@@ -243,7 +316,9 @@ const editTable = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertColumnLe
 defineExpose({
   insertText,
   insertAtCursorAndEnd,
-  editTable
+  editTable,
+  toggleFormat,
+  toggleLinePrefix
 })
 
 const contextMenuVisible = ref(false)
