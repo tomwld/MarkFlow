@@ -1,8 +1,7 @@
 use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem, IsMenuItem};
 use tauri::{Emitter, AppHandle, Wry, Manager};
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
-use notify::{Watcher, RecursiveMode, RecommendedWatcher, Config};
+use notify::{Watcher, RecursiveMode, RecommendedWatcher};
 use std::path::Path;
 
 struct WatcherState {

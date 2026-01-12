@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="./app-icon.svg" alt="MarkFlow Logo" width="120" />
-  <p>一个基于 Tauri、Vue 3 和 TypeScript 构建的现代、轻量且功能丰富的 Markdown 编辑器。</p>
+  <p>一个纯粹、现代、轻量且功能丰富的Markdown 编辑器，基于 Tauri、Vue 3 和 TypeScript 构建， 提供流畅的输入体验。</p>
   
   [English](./README.md) | **简体中文**
 </div>

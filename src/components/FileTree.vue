@@ -143,6 +143,7 @@ watch(() => props.path, async () => {
           v-else-if="isMarkdown(entry.name)"
           class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-[#2c313a] cursor-pointer text-gray-600 dark:text-[#abb2bf]"
           :style="{ paddingLeft: `${(depth || 0) * 12 + (depth === 0 ? 8 : 20)}px` }"
+          :title="entry.name"
           @click="handleFileClick(entry)"
           @contextmenu.prevent.stop="handleContextMenu($event, entry)"
         >
