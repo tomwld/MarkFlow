@@ -83,6 +83,12 @@ struct MenuLabels {
     help: String,
     about: String,
     markdown_syntax: String,
+    insert: String,
+    insert_table: String,
+    insert_footnote: String,
+    insert_task_list: String,
+    insert_code_block: String,
+    insert_emoji: String,
 }
 
 impl Default for MenuLabels {
@@ -115,6 +121,12 @@ impl Default for MenuLabels {
             help: "Help".into(),
             about: "About".into(),
             markdown_syntax: "Markdown Syntax".into(),
+            insert: "Insert".into(),
+            insert_table: "Table".into(),
+            insert_footnote: "Footnote".into(),
+            insert_task_list: "Task List".into(),
+            insert_code_block: "Code Block".into(),
+            insert_emoji: "Emoji".into(),
         }
     }
 }
@@ -123,11 +135,11 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     // File Menu
     let new_i = MenuItem::with_id(handle, "file-new", &labels.new, true, Some("CmdOrCtrl+N"))?;
     let open_i = MenuItem::with_id(handle, "file-open", &labels.open, true, Some("CmdOrCtrl+O"))?;
-    let open_folder_i = MenuItem::with_id(handle, "file-open-folder", &labels.open_folder, true, Some("CmdOrCtrl+Shift+O"))?;
+    let open_folder_i = MenuItem::with_id(handle, "file-open-folder", &labels.open_folder, true, Some("CmdOrCtrl+Alt+O"))?;
     let save_i = MenuItem::with_id(handle, "file-save", &labels.save, true, Some("CmdOrCtrl+S"))?;
-    let save_as_i = MenuItem::with_id(handle, "file-save-as", &labels.save_as, true, Some("CmdOrCtrl+Shift+S"))?;
-    let export_pdf_i = MenuItem::with_id(handle, "file-export-pdf", &labels.export_pdf, true, None::<&str>)?;
-    let export_html_i = MenuItem::with_id(handle, "file-export-html", &labels.export_html, true, None::<&str>)?;
+    let save_as_i = MenuItem::with_id(handle, "file-save-as", &labels.save_as, true, Some("CmdOrCtrl+Alt+S"))?;
+    let export_pdf_i = MenuItem::with_id(handle, "file-export-pdf", &labels.export_pdf, true, Some("CmdOrCtrl+Alt+P"))?;
+    let export_html_i = MenuItem::with_id(handle, "file-export-html", &labels.export_html, true, Some("CmdOrCtrl+Alt+H"))?;
     let close_i = MenuItem::with_id(handle, "file-close", &labels.close, true, Some("CmdOrCtrl+W"))?;
     // Use custom MenuItem for Quit to handle unsaved changes
     let quit_i = MenuItem::with_id(handle, "file-quit", &labels.quit, true, None::<&str>)?;
@@ -165,10 +177,27 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     ];
 
     let edit_menu = Submenu::with_items(handle, &labels.edit, true, &edit_items)?;
+
+    // Insert Menu
+    let insert_table_i = MenuItem::with_id(handle, "insert-table", &labels.insert_table, true, Some("CmdOrCtrl+Alt+T"))?;
+    let insert_footnote_i = MenuItem::with_id(handle, "insert-footnote", &labels.insert_footnote, true, Some("CmdOrCtrl+Alt+F"))?;
+    let insert_tasklist_i = MenuItem::with_id(handle, "insert-tasklist", &labels.insert_task_list, true, Some("CmdOrCtrl+Alt+L"))?;
+    let insert_codeblock_i = MenuItem::with_id(handle, "insert-codeblock", &labels.insert_code_block, true, Some("CmdOrCtrl+Alt+C"))?;
+    let insert_emoji_i = MenuItem::with_id(handle, "insert-emoji", &labels.insert_emoji, true, Some("CmdOrCtrl+Alt+E"))?;
+
+    let insert_items: Vec<&dyn IsMenuItem<Wry>> = vec![
+        &insert_table_i,
+        &insert_footnote_i,
+        &insert_tasklist_i,
+        &insert_codeblock_i,
+        &insert_emoji_i,
+    ];
+
+    let insert_menu = Submenu::with_items(handle, &labels.insert, true, &insert_items)?;
     
     // View Menu
     let toggle_sidebar_i = MenuItem::with_id(handle, "view-toggle-sidebar", &labels.toggle_sidebar, true, Some("CmdOrCtrl+B"))?;
-    let toggle_outline_i = MenuItem::with_id(handle, "view-toggle-outline", &labels.toggle_outline, true, Some("CmdOrCtrl+Shift+B"))?;
+    let toggle_outline_i = MenuItem::with_id(handle, "view-toggle-outline", &labels.toggle_outline, true, Some("CmdOrCtrl+Alt+B"))?;
     let preview_i = MenuItem::with_id(handle, "view-toggle-preview", &labels.toggle_preview, true, Some("CmdOrCtrl+P"))?;
     let theme_i = MenuItem::with_id(handle, "view-toggle-theme", &labels.toggle_theme, true, None::<&str>)?;
     let focus_i = MenuItem::with_id(handle, "view-toggle-focus", &labels.toggle_focus, true, None::<&str>)?;
@@ -194,7 +223,7 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     ])?;
 
     let menu = Menu::with_items(handle, &[
-        &file_menu, &edit_menu, &view_menu, &help_menu
+        &file_menu, &edit_menu, &insert_menu, &view_menu, &help_menu
     ])?;
     
     Ok(menu)

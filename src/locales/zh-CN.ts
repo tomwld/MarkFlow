@@ -19,6 +19,12 @@ export default {
     paste: '粘贴',
     selectAll: '全选',
     view: '视图',
+    insert: '插入',
+    insertTable: '表格',
+    insertFootnote: '脚注',
+    insertTaskList: '任务列表',
+    insertCodeBlock: '代码块',
+    insertEmoji: '表情符号',
     toggleSidebar: '切换侧边栏',
     toggleOutline: '切换大纲',
     togglePreview: '切换预览',
@@ -28,6 +34,15 @@ export default {
     help: '帮助',
     about: '关于',
     markdownSyntax: 'Markdown 语法'
+  },
+  table: {
+    actions: '表格操作',
+    insertRowAbove: '在上方插入行',
+    insertRowBelow: '在下方插入行',
+    insertColumnLeft: '在左侧插入列',
+    insertColumnRight: '在右侧插入列',
+    deleteRow: '删除行',
+    deleteColumn: '删除列'
   },
   toolbar: {
     newFile: '新建文件',

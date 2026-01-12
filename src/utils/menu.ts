@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { Composer } from 'vue-i18n'
+import { message } from '@tauri-apps/plugin-dialog'
 
 export const updateMenuLanguage = async (t: Composer['t']) => {
   const labels = {
@@ -21,6 +22,12 @@ export const updateMenuLanguage = async (t: Composer['t']) => {
     paste: t('menu.paste'),
     selectAll: t('menu.selectAll'),
     view: t('menu.view'),
+    insert: t('menu.insert'),
+    insertTable: t('menu.insertTable'),
+    insertFootnote: t('menu.insertFootnote'),
+    insertTaskList: t('menu.insertTaskList'),
+    insertCodeBlock: t('menu.insertCodeBlock'),
+    insertEmoji: t('menu.insertEmoji'),
     toggleSidebar: t('menu.toggleSidebar'),
     toggleOutline: t('menu.toggleOutline'),
     togglePreview: t('menu.togglePreview'),
@@ -36,5 +43,6 @@ export const updateMenuLanguage = async (t: Composer['t']) => {
     await invoke('update_menu', { labels })
   } catch (e) {
     console.error('Failed to update menu language:', e)
+    await message(`Failed to update menu language: ${e}`, { kind: 'error' })
   }
 }

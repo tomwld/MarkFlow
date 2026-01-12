@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDark, useToggle, onClickOutside } from '@vueuse/core'
 import { useFileOperations } from '../composables/useFileOperations'
@@ -10,6 +10,8 @@ import EmojiPicker from './EmojiPicker.vue'
 const { t } = useI18n()
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
+
+const showEmojiPickerFromMenu = inject('showEmojiPickerFromMenu', ref(false))
 
 const { 
   newFile, 
@@ -33,6 +35,14 @@ const { insertMarkdown, insertEmoji } = useEditor()
 const showEmojiPicker = ref(false)
 const showRecentFiles = ref(false)
 const recentFilesRef = ref(null)
+
+// Sync with menu event
+watch(showEmojiPickerFromMenu, (val) => {
+  if (val) {
+    showEmojiPicker.value = true
+    showEmojiPickerFromMenu.value = false
+  }
+})
 
 onClickOutside(recentFilesRef, () => {
   showRecentFiles.value = false

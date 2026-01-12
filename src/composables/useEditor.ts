@@ -50,6 +50,12 @@ export function useEditor() {
     insertText(text)
   }
 
+  const editTable = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertColumnLeft' | 'insertColumnRight' | 'deleteRow' | 'deleteColumn') => {
+    if (editorRef.value) {
+      editorRef.value.editTable(action)
+    }
+  }
+
   const handleCursorChange = (line: number, col: number) => {
     if (activeDocument.value) {
       activeDocument.value.cursorLine = line
@@ -63,6 +69,7 @@ export function useEditor() {
     insertText,
     insertEmoji,
     insertMarkdown,
+    editTable,
     handleCursorChange
   }
 }

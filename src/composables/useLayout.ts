@@ -9,6 +9,7 @@ const showSidebar = ref(true)
 const showOutline = ref(true)
 const showFiles = ref(true)
 const showSettings = ref(false)
+const showEmojiPicker = ref(false)
 const sidebarWidth = useStorage('sidebar-width', 250)
 
 // Resizing state
@@ -91,6 +92,7 @@ export function useLayout() {
     showOutline,
     showFiles,
     showSettings,
+    showEmojiPicker,
     sidebarWidth,
     toggleOutline,
     startSidebarResize,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch, ref, provide } from 'vue'
 import StatusBar from './components/StatusBar.vue'
 import TabBar from './components/TabBar.vue'
 import Toolbar from './components/Toolbar.vue'
@@ -19,6 +19,7 @@ import { useLayout } from './composables/useLayout'
 import { useExport } from './composables/useExport'
 import { useFileWatcher } from './composables/useFileWatcher'
 import { useAppLifecycle } from './composables/useAppLifecycle'
+import { useEditor } from './composables/useEditor'
 import { useShortcuts } from './composables/useShortcuts'
 import { updateMenuLanguage } from './utils/menu'
 // @ts-ignore
@@ -30,6 +31,9 @@ import markdownHelpZh from './assets/markdown-zh.md?raw'
 const { t, locale } = useI18n()
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
+
+const { insertMarkdown } = useEditor()
+// const showEmojiPickerFromMenu = ref(false)
 
 const { 
   documents, 
@@ -56,6 +60,7 @@ const {
   showSidebar, 
   showPreview, 
   showSettings, 
+  showEmojiPicker,
   toggleOutline
 } = useLayout()
 
@@ -74,6 +79,9 @@ const {
 } = useAppLifecycle()
 
 const { registerShortcuts, unregisterShortcuts } = useShortcuts()
+
+// Provide emoji picker control to children
+provide('showEmojiPickerFromMenu', showEmojiPicker)
 
 let unlistenMenu: UnlistenFn | null = null
 let unlistenCloseRequest: UnlistenFn | null = null
@@ -163,6 +171,11 @@ onMounted(async () => {
         case 'view-toggle-theme': toggleDark(); break; 
         case 'view-toggle-focus': isFocusMode.value = !isFocusMode.value; break;
         case 'view-settings': showSettings.value = true; break;
+        case 'insert-table': insertMarkdown('table'); break;
+        case 'insert-footnote': insertMarkdown('footnote'); break;
+        case 'insert-tasklist': insertMarkdown('tasklist'); break;
+        case 'insert-codeblock': insertMarkdown('codeblock'); break;
+        case 'insert-emoji': showEmojiPicker.value = true; break;
         case 'help-markdown-syntax': openMarkdownSyntax(); break;
         case 'help-about': showAbout(); break;
     }

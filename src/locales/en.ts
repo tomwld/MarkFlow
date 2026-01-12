@@ -19,6 +19,12 @@ export default {
     paste: 'Paste',
     selectAll: 'Select All',
     view: 'View',
+    insert: 'Insert',
+    insertTable: 'Table',
+    insertFootnote: 'Footnote',
+    insertTaskList: 'Task List',
+    insertCodeBlock: 'Code Block',
+    insertEmoji: 'Emoji',
     toggleSidebar: 'Toggle Sidebar',
     toggleOutline: 'Toggle Outline',
     togglePreview: 'Toggle Preview',
@@ -28,6 +34,15 @@ export default {
     help: 'Help',
     about: 'About',
     markdownSyntax: 'Markdown Syntax'
+  },
+  table: {
+    actions: 'Table Actions',
+    insertRowAbove: 'Insert Row Above',
+    insertRowBelow: 'Insert Row Below',
+    insertColumnLeft: 'Insert Column Left',
+    insertColumnRight: 'Insert Column Right',
+    deleteRow: 'Delete Row',
+    deleteColumn: 'Delete Column'
   },
   toolbar: {
     newFile: 'New File',
