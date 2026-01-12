@@ -7,4 +7,5 @@ export interface MarkdownDocument {
   cursorLine: number
   cursorCol: number
   // Optional: Scroll position could be added here
+  isReloadPromptShowing?: boolean
 }

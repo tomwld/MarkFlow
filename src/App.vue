@@ -7,7 +7,7 @@ import TabBar from './components/TabBar.vue'
 import FileTree from './components/FileTree.vue'
 import Outline from './components/Outline.vue'
 import { type MarkdownDocument } from './types/document'
-import { open, save, message } from '@tauri-apps/plugin-dialog'
+import { open, save, message, ask } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -451,8 +451,21 @@ const checkAppClose = () => {
       fileToCloseId.value = nextModified.id
       showSaveConfirm.value = true
     } else {
-      getCurrentWindow().close()
+      invoke('exit_app')
     }
+  }
+}
+
+const quitApp = () => {
+  const hasModified = documents.value.some(d => d.isModified)
+  
+  if (hasModified) {
+    if (!isAppClosing.value) {
+      isAppClosing.value = true
+      checkAppClose()
+    }
+  } else {
+    invoke('exit_app')
   }
 }
 
@@ -651,21 +664,27 @@ const exportToPdf = async (path: string) => {
   // Save current scroll position
   const scrollPos = window.scrollY
 
-  // Mount to DOM to ensure styles are computed correctly
-  wrapper.style.position = 'absolute'
-  wrapper.style.left = '0'
-  wrapper.style.top = '0'
-  wrapper.style.zIndex = '2147483647' // Max z-index to ensure visibility
+  // Mount to DOM
   wrapper.style.backgroundColor = '#ffffff'
-  wrapper.style.width = '800px' // Ensure fixed width for PDF generation
-  wrapper.style.minHeight = '100vh' // Ensure minimum height
+  wrapper.style.width = '800px'
+  wrapper.style.minHeight = '100vh'
+  wrapper.style.margin = '0 auto' // Center it
+  
+  // Hide app content temporarily to avoid interference
+  const appElement = document.getElementById('app')
+  let originalDisplay = ''
+  if (appElement) {
+    originalDisplay = appElement.style.display
+    appElement.style.display = 'none'
+  }
+  
   document.body.appendChild(wrapper)
 
   try {
-    // Scroll to top to ensure html2canvas captures from the beginning
+    // Scroll to top
     window.scrollTo(0, 0)
     
-    // Small delay to ensure rendering and scroll completion
+    // Small delay to ensure rendering
     await new Promise(resolve => setTimeout(resolve, 500))
     
     const worker = html2pdf().from(wrapper).set(opt).toPdf().get('pdf').then((pdf: any) => {
@@ -691,6 +710,10 @@ const exportToPdf = async (path: string) => {
   } finally {
     if (document.body.contains(wrapper)) {
       document.body.removeChild(wrapper)
+    }
+    // Restore app visibility
+    if (appElement) {
+      appElement.style.display = originalDisplay
     }
     // Restore scroll position
     window.scrollTo(0, scrollPos)
@@ -824,8 +847,26 @@ onMounted(async () => {
             
             // Check if we have unsaved changes
             if (doc.isModified) {
-                // If user has unsaved changes, we warn them but don't overwrite automatically for safety
-                await message(t('editor.fileChangedExternal'), { title: 'External Change', kind: 'warning' })
+                // Check if dialog is already showing to prevent multiple dialogs
+                if (doc.isReloadPromptShowing) return
+
+                doc.isReloadPromptShowing = true
+                // Ask user if they want to reload
+                const shouldReload = await ask(
+                  t('editor.fileChangedReloadMessage'),
+                  { 
+                    title: t('editor.fileChangedTitle'),
+                    kind: 'warning',
+                    okLabel: t('dialog.yes'),
+                    cancelLabel: t('dialog.no')
+                  }
+                )
+                doc.isReloadPromptShowing = false
+
+                if (shouldReload) {
+                  doc.content = content
+                  doc.isModified = false 
+                }
             } else {
                 // If no unsaved changes, auto-update
                 doc.content = content
@@ -850,6 +891,7 @@ onMounted(async () => {
         case 'file-open-folder': openFolder(); break;
         case 'file-save': saveFile(); break;
         case 'file-save-as': saveAsFile(); break;
+        case 'file-quit': quitApp(); break;
         case 'file-export-pdf': exportDocument('pdf'); break;
         case 'file-export-html': exportDocument('html'); break;
         case 'file-close': if (activeDocId.value) closeFile(activeDocId.value); break;
@@ -867,12 +909,21 @@ onMounted(async () => {
   updateMenuLanguage(t)
 
   // Listen for window close request
-  unlistenCloseRequest.value = await getCurrentWindow().onCloseRequested(async (event) => {
+  unlistenCloseRequest.value = await getCurrentWindow().onCloseRequested((event) => {
+    // Check if any document has modifications
     const hasModified = documents.value.some(d => d.isModified)
+    
     if (hasModified) {
       event.preventDefault()
-      isAppClosing.value = true
-      checkAppClose()
+      
+      if (!isAppClosing.value) {
+        isAppClosing.value = true
+        checkAppClose()
+      }
+    } else {
+      // Force exit app
+      event.preventDefault()
+      invoke('exit_app')
     }
   })
 })

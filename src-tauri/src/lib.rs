@@ -127,7 +127,8 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let export_pdf_i = MenuItem::with_id(handle, "file-export-pdf", &labels.export_pdf, true, None::<&str>)?;
     let export_html_i = MenuItem::with_id(handle, "file-export-html", &labels.export_html, true, None::<&str>)?;
     let close_i = MenuItem::with_id(handle, "file-close", &labels.close, true, Some("CmdOrCtrl+W"))?;
-    let quit_i = PredefinedMenuItem::quit(handle, Some(&labels.quit))?;
+    // Use custom MenuItem for Quit to handle unsaved changes
+    let quit_i = MenuItem::with_id(handle, "file-quit", &labels.quit, true, None::<&str>)?;
     
     let file_menu = Submenu::with_items(handle, &labels.file, true, &[
         &new_i, &open_i, &open_folder_i, &save_i, &save_as_i, &export_pdf_i, &export_html_i, &close_i, &quit_i
@@ -183,6 +184,11 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+fn exit_app(app: AppHandle) {
+    app.exit(0);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
@@ -202,7 +208,7 @@ pub fn run() {
             // Emit event to frontend
              let _ = app.emit("menu-event", event_id);
         })
-        .invoke_handler(tauri::generate_handler![greet, update_menu, watch_file, unwatch_file]);
+        .invoke_handler(tauri::generate_handler![greet, update_menu, watch_file, unwatch_file, exit_app]);
 
 
     if let Err(err) = builder.run(tauri::generate_context!()) {

@@ -71,7 +71,9 @@ export default {
     saveChangesMessage: 'Do you want to save the changes you made to "{file}"?',
     save: 'Save',
     dontSave: 'Don\'t Save',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    yes: 'Yes',
+    no: 'No'
   },
   emoji: {
     smileys: 'Smileys & Emotion',
@@ -93,6 +95,8 @@ export default {
   },
   editor: {
     placeholder: 'Start typing...',
-    fileChangedExternal: 'The file has been changed externally. Content has been reloaded.'
+    fileChangedExternal: 'The file has been changed externally. Content has been reloaded.',
+    fileChangedReloadMessage: 'The file has been modified externally. Reload?',
+    fileChangedTitle: 'External Change'
   }
 }

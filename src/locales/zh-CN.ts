@@ -71,7 +71,9 @@ export default {
     saveChangesMessage: '是否保存对 "{file}" 的更改？',
     save: '保存',
     dontSave: '不保存',
-    cancel: '取消'
+    cancel: '取消',
+    yes: '是',
+    no: '否'
   },
   emoji: {
     smileys: '表情与情感',
@@ -93,6 +95,8 @@ export default {
   },
   editor: {
     placeholder: '开始输入...',
-    fileChangedExternal: '文件已在外部被修改，内容已重新加载。'
+    fileChangedExternal: '文件已在外部被修改，内容已重新加载。',
+    fileChangedReloadMessage: '文件已在外部被修改，是否重新加载？',
+    fileChangedTitle: '外部修改'
   }
 }
