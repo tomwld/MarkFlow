@@ -94,6 +94,7 @@ const extensions = computed(() => {
     autocompletion({ override: [codeBlockLanguageCompletion] }),
     search(),
     keymap.of(searchKeymap),
+    EditorView.lineWrapping,
     EditorState.phrases.of({
       "Go to line": t('search.goToLine'),
       "go": t('search.go'),
