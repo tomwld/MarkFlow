@@ -10,6 +10,7 @@ import deflist from 'markdown-it-deflist'
 import { computed, watch, ref } from 'vue'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import 'github-markdown-css/github-markdown.css'
+import 'highlight.js/styles/github.css'
 // @ts-ignore
 import hljs from 'highlight.js'
 

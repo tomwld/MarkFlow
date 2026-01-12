@@ -24,6 +24,7 @@
     "@vueuse/core": "^14.1.0",
     "github-markdown-css": "^5.8.1",
     "highlight.js": "^11.11.1",
+    "html-docx-js-typescript": "^0.1.5",
     "html2pdf.js": "^0.13.0",
     "markdown-it": "^14.1.0",
     "markdown-it-abbr": "^2.0.0",
