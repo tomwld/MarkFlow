@@ -37,8 +37,8 @@ export function useEditor() {
           }
         }
         const nextNum = maxNum + 1
-        text = `[^${nextNum}]\n\n[^${nextNum}]: Footnote text`
-        break
+        editorRef.value.insertAtCursorAndEnd(`[^${nextNum}]`, `[^${nextNum}]: Footnote text`)
+        return
       case 'tasklist':
         text = '- [ ] Task item'
         break

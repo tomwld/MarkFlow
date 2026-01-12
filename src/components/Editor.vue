@@ -98,8 +98,32 @@ const insertText = (text: string) => {
   }
 }
 
+const insertAtCursorAndEnd = (cursorText: string, endText: string) => {
+  if (view.value) {
+    const state = view.value.state
+    const selection = state.selection.main
+    const from = selection.from
+    const to = selection.to
+    const docLength = state.doc.length
+    
+    // Check if we need a newline before appending
+    const lastLine = state.doc.lineAt(docLength)
+    const prefix = lastLine.length > 0 ? '\n\n' : '\n'
+    
+    view.value.dispatch({
+      changes: [
+        { from, to, insert: cursorText },
+        { from: docLength, insert: prefix + endText }
+      ],
+      selection: { anchor: from + cursorText.length, head: from + cursorText.length },
+      scrollIntoView: true
+    })
+  }
+}
+
 defineExpose({
-  insertText
+  insertText,
+  insertAtCursorAndEnd
 })
 </script>
 
