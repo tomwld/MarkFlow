@@ -14,10 +14,14 @@
 - **🌗 Themeable**: Native support for Light and Dark modes.
 - **📂 File Management**: 
   - Integrated File Tree and Outline view (Toggleable sidebar sections).
+  - **Context Menu Support**: Right-click in the file tree to create new files/folders, rename, delete, and reveal in explorer.
   - Tabbed editing interface.
   - Auto-save and session persistence (restores open files on launch).
   - Recent files history.
   - "Smart Naming" for new files based on content.
+- **🖥️ System Integration**:
+  - **File Associations**: Directly open `.md`, `.markdown`, and `.txt` files.
+  - **Context Menu**: "Open with MarkFlow" option in File Explorer.
 - **🛠️ Productivity Tools**:
   - **Focus Mode**: Distraction-free writing.
   - **Interactive Preview**: Clickable task lists and links in the preview window.
@@ -27,6 +31,27 @@
   - **Status Bar**: Real-time word count, line count, and cursor position.
 - **🌍 Internationalization**: Full support for English and Simplified Chinese (简体中文).
 - **📤 Export**: Export documents to styled HTML and PDF.
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + N` | New File |
+| `Ctrl/Cmd + O` | Open File |
+| `Ctrl/Cmd + Alt + O` | Open Folder |
+| `Ctrl/Cmd + S` | Save File |
+| `Ctrl/Cmd + Alt + S` | Save As |
+| `Ctrl/Cmd + P` | Toggle Preview |
+| `Ctrl/Cmd + Alt + P` | Export to PDF |
+| `Ctrl/Cmd + Alt + H` | Export to HTML |
+| `Ctrl/Cmd + B` | Toggle Sidebar |
+| `Ctrl/Cmd + Alt + B` | Toggle Outline |
+| `Ctrl/Cmd + Alt + E` | Open Emoji Picker |
+| `Ctrl/Cmd + Alt + T` | Insert Table |
+| `Ctrl/Cmd + Alt + F` | Insert Footnote |
+| `Ctrl/Cmd + Alt + L` | Insert Task List |
+| `Ctrl/Cmd + Alt + C` | Insert Code Block |
+| `F11` | Toggle Focus Mode |
 
 ## 🛠️ Tech Stack
 

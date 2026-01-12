@@ -5,10 +5,12 @@ import { readDir, type DirEntry } from '@tauri-apps/plugin-fs'
 const props = defineProps<{
   path: string
   depth?: number
+  refreshSignal?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'file-click', path: string): void
+  (e: 'context-menu', event: MouseEvent, path: string, isDir: boolean): void
 }>()
 
 const entries = ref<DirEntry[]>([])
@@ -30,6 +32,12 @@ const loadDir = async () => {
       return a.name.localeCompare(b.name)
     })
   } catch (error) {
+    // Ignore error if path no longer exists (e.g. during rename/delete)
+    const errStr = String(error)
+    if (errStr.includes('os error 3') || errStr.includes('no such file or directory')) {
+      entries.value = [] // Clear entries as path is gone
+      return
+    }
     console.error('Failed to read dir:', props.path, error)
   } finally {
     isLoading.value = false
@@ -43,6 +51,12 @@ const toggle = async () => {
     await loadDir()
   }
 }
+
+watch(() => props.refreshSignal, async () => {
+  if (isOpen.value) {
+    await loadDir()
+  }
+})
 
 const handleFileClick = async (entry: DirEntry) => {
   if (entry.isDirectory) return
@@ -70,6 +84,15 @@ const handleFileClick = async (entry: DirEntry) => {
   emit('file-click', fullPath)
 }
 
+const handleContextMenu = (e: MouseEvent, entry: DirEntry) => {
+  const fullPath = `${props.path}\\${entry.name}`
+  emit('context-menu', e, fullPath, entry.isDirectory)
+}
+
+const handleHeaderContextMenu = (e: MouseEvent) => {
+  emit('context-menu', e, props.path, true)
+}
+
 const handleChildClick = (path: string) => {
   emit('file-click', path)
 }
@@ -95,6 +118,7 @@ watch(() => props.path, async () => {
       class="flex items-center gap-1 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-300"
       :style="{ paddingLeft: `${(depth || 0) * 12 + 8}px` }"
       @click="toggle"
+      @contextmenu.prevent.stop="handleHeaderContextMenu"
     >
       <div :class="isOpen ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right'" class="text-xs opacity-70"></div>
       <div class="i-carbon-folder text-yellow-500"></div>
@@ -109,7 +133,9 @@ watch(() => props.path, async () => {
           v-if="entry.isDirectory"
           :path="`${path}\\${entry.name}`" 
           :depth="(depth || 0) + 1"
+          :refresh-signal="refreshSignal"
           @file-click="handleChildClick"
+          @context-menu="(e, p, d) => emit('context-menu', e, p, d)"
         />
         
         <!-- File (Markdown only) -->
@@ -118,6 +144,7 @@ watch(() => props.path, async () => {
           class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-600 dark:text-gray-400"
           :style="{ paddingLeft: `${(depth || 0) * 12 + (depth === 0 ? 8 : 20)}px` }"
           @click="handleFileClick(entry)"
+          @contextmenu.prevent.stop="handleContextMenu($event, entry)"
         >
           <div class="i-carbon-document text-gray-400"></div>
           <span class="truncate">{{ entry.name }}</span>

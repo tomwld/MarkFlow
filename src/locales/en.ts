@@ -2,6 +2,11 @@ export default {
   menu: {
     file: 'File',
     new: 'New File',
+    newFile: 'New File',
+    newFolder: 'New Folder',
+    rename: 'Rename',
+    delete: 'Delete',
+    revealInExplorer: 'Reveal in Explorer',
     open: 'Open File',
     openFolder: 'Open Folder',
     save: 'Save',

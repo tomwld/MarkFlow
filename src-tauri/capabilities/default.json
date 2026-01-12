@@ -14,6 +14,10 @@
     "fs:allow-read-text-file",
     "fs:allow-write-file",
     "fs:allow-read-file",
+    "fs:allow-remove",
+    "fs:allow-rename",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
     {
       "identifier": "fs:scope",
       "allow": ["$HOME/**", "**"]

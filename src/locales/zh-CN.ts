@@ -2,6 +2,11 @@ export default {
   menu: {
     file: '文件',
     new: '新建文件',
+    newFile: '新建文件',
+    newFolder: '新建文件夹',
+    rename: '重命名',
+    delete: '删除',
+    revealInExplorer: '在资源管理器中显示',
     open: '打开文件',
     openFolder: '打开文件夹',
     save: '保存',

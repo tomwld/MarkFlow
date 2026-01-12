@@ -58,6 +58,11 @@ export function useFileWatcher() {
               }
           }
         } catch (err) {
+          // Ignore error if file no longer exists (e.g. deleted)
+          const errStr = String(err)
+          if (errStr.includes('os error 2') || errStr.includes('no such file')) {
+            return
+          }
           console.error('Failed to reload file:', err)
         }
       }

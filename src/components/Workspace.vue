@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 import FileTree from './FileTree.vue'
 import Outline from './Outline.vue'
 import Editor from './Editor.vue'
 import Preview from './Preview.vue'
+import ContextMenu, { type MenuItem } from './ContextMenu.vue'
+import PromptModal from './PromptModal.vue'
 import { useLayout } from '../composables/useLayout'
 import { useDocuments } from '../composables/useDocuments'
 import { useEditor } from '../composables/useEditor'
@@ -28,8 +31,110 @@ const { activeDocument } = useDocuments()
 const { 
   loadFile, 
   handleLinkClick,
-  currentFolder
+  currentFolder,
+  createFileInDir, 
+  createFolderInDir, 
+  renamePath, 
+  deletePath, 
+  showInExplorer
 } = useFileOperations()
+
+// Context Menu State
+const contextMenuVisible = ref(false)
+const contextMenuX = ref(0)
+const contextMenuY = ref(0)
+const contextMenuItems = ref<MenuItem[]>([])
+
+// Prompt Modal State
+const promptVisible = ref(false)
+const promptTitle = ref('')
+const promptDefault = ref('')
+const promptAction = ref<((value: string) => Promise<void>) | null>(null)
+
+// Refresh Signal
+const refreshSignal = ref(0)
+
+const handlePromptConfirm = async (value: string) => {
+  if (promptAction.value) {
+    await promptAction.value(value)
+    promptAction.value = null
+    refreshSignal.value++
+  }
+}
+
+const handleFileContextMenu = (e: MouseEvent, path: string, isDir: boolean) => {
+  e.preventDefault()
+  contextMenuX.value = e.clientX
+  contextMenuY.value = e.clientY
+  
+  const items: MenuItem[] = []
+  
+  if (isDir) {
+    items.push({
+      label: t('menu.newFile'),
+      icon: 'i-carbon-document-add',
+      action: () => {
+        promptTitle.value = t('menu.newFile')
+        promptDefault.value = ''
+        promptAction.value = async (name) => {
+          const newPath = await createFileInDir(path, name)
+          await loadFile(newPath)
+        }
+        promptVisible.value = true
+      }
+    })
+    items.push({
+      label: t('menu.newFolder'),
+      icon: 'i-carbon-folder-add',
+      action: () => {
+        promptTitle.value = t('menu.newFolder')
+        promptDefault.value = ''
+        promptAction.value = async (name) => {
+          await createFolderInDir(path, name)
+        }
+        promptVisible.value = true
+      }
+    })
+    items.push({ separator: true, label: '', action: () => {} })
+  }
+
+  items.push({
+    label: t('menu.rename'),
+    icon: 'i-carbon-edit',
+    action: () => {
+      promptTitle.value = t('menu.rename')
+      promptDefault.value = path.split(/[\\/]/).pop() || ''
+      promptAction.value = async (name) => {
+        if (name !== promptDefault.value) {
+          await renamePath(path, name)
+        }
+      }
+      promptVisible.value = true
+    }
+  })
+  
+  items.push({
+    label: t('menu.delete'),
+    icon: 'i-carbon-trash-can',
+    danger: true,
+    action: async () => {
+      if (await deletePath(path, isDir)) {
+        refreshSignal.value++
+      }
+    }
+  })
+  
+  items.push({ separator: true, label: '', action: () => {} })
+  
+  items.push({
+    label: t('menu.revealInExplorer'),
+    icon: 'i-carbon-folder-open',
+    action: () => showInExplorer(path)
+  })
+  
+  contextMenuItems.value = items
+  contextMenuVisible.value = true
+}
 
 const { 
   editorRef, 
@@ -57,6 +162,7 @@ const { newFile, openFile, openFolder } = useFileOperations()
           <div 
             class="flex items-center px-2 py-1.5 bg-gray-100 dark:bg-[#333333] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
             @click="showFiles = !showFiles"
+            @contextmenu.prevent="currentFolder && handleFileContextMenu($event, currentFolder, true)"
           >
              <div class="i-carbon-chevron-right transform transition-transform text-gray-500" :class="{ 'rotate-90': showFiles }"></div>
              <span class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 flex-1 truncate" :title="currentFolder">{{ currentFolder.split(/[\\/]/).pop() }}</span>
@@ -67,7 +173,12 @@ const { newFile, openFile, openFolder } = useFileOperations()
              </div>
           </div>
           <div v-show="showFiles" class="flex-1 overflow-y-auto custom-scrollbar">
-             <FileTree :path="currentFolder" @file-click="(path) => loadFile(path)" />
+             <FileTree 
+               :path="currentFolder" 
+               :refresh-signal="refreshSignal"
+               @file-click="(path) => loadFile(path)" 
+               @context-menu="handleFileContextMenu"
+             />
           </div>
        </div>
 
@@ -162,5 +273,20 @@ const { newFile, openFile, openFolder } = useFileOperations()
         <div class="i-carbon-minimize text-lg"></div>
       </button>
     </div>
+
+    <!-- Modals -->
+    <ContextMenu
+      v-model:visible="contextMenuVisible"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :items="contextMenuItems"
+    />
+    
+    <PromptModal
+      v-model:visible="promptVisible"
+      :title="promptTitle"
+      :default-value="promptDefault"
+      @confirm="handlePromptConfirm"
+    />
   </div>
 </template>

@@ -1,7 +1,8 @@
-import { open, save, message } from '@tauri-apps/plugin-dialog'
-import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
+import { open, save, message, ask } from '@tauri-apps/plugin-dialog'
+import { readTextFile, writeTextFile, exists, mkdir, rename, remove } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core'
 import { join, dirname, isAbsolute } from '@tauri-apps/api/path'
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { useStorage } from '@vueuse/core'
 import { useDocuments } from './useDocuments'
 
@@ -180,6 +181,106 @@ export function useFileOperations() {
     }
   }
 
+  const createFileInDir = async (dir: string, name: string) => {
+    try {
+      // Default extension to .md if none provided
+      if (!name.includes('.')) {
+        name += '.md'
+      }
+      const path = await join(dir, name)
+      if (await exists(path)) {
+        throw new Error('File already exists')
+      }
+      await writeTextFile(path, '')
+      return path
+    } catch (error) {
+      console.error('Failed to create file:', error)
+      throw error
+    }
+  }
+
+  const createFolderInDir = async (dir: string, name: string) => {
+    try {
+      const path = await join(dir, name)
+      if (await exists(path)) {
+        throw new Error('Folder already exists')
+      }
+      await mkdir(path)
+      return path
+    } catch (error) {
+      console.error('Failed to create folder:', error)
+      throw error
+    }
+  }
+
+  const renamePath = async (oldPath: string, newName: string) => {
+    try {
+      const parent = await dirname(oldPath)
+      const newPath = await join(parent, newName)
+      if (await exists(newPath)) {
+        throw new Error('Destination already exists')
+      }
+      await rename(oldPath, newPath)
+      
+      // Update open documents if needed
+      const doc = documents.value.find(d => d.filePath === oldPath)
+      if (doc) {
+        doc.filePath = newPath
+        doc.title = newName
+        await invoke('unwatch_file', { path: oldPath }).catch(() => {})
+        await invoke('watch_file', { path: newPath }).catch(() => {})
+      }
+      
+      return newPath
+    } catch (error) {
+      console.error('Failed to rename:', error)
+      throw error
+    }
+  }
+
+  const deletePath = async (path: string, isDir: boolean) => {
+    try {
+      const confirmed = await ask(`Are you sure you want to delete "${path}"?`, {
+        title: 'Confirm Delete',
+        kind: 'warning'
+      })
+      
+      if (!confirmed) return false
+
+      // Close documents before deleting to prevent file watcher errors
+      if (isDir) {
+        // Find all open files within this directory
+        const docsToClose = documents.value.filter(d => d.filePath && d.filePath.startsWith(path))
+        docsToClose.forEach(d => closeFile(d.id))
+      } else {
+        const doc = documents.value.find(d => d.filePath === path)
+        if (doc) {
+          closeFile(doc.id)
+        }
+      }
+
+      if (isDir) {
+        await remove(path, { recursive: true })
+      } else {
+        await remove(path)
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to delete:', error)
+      throw error
+    }
+  }
+
+  const showInExplorer = async (path: string) => {
+    try {
+      await revealItemInDir(path)
+    } catch (error) {
+      console.error('Failed to show in explorer:', error)
+      throw error
+    }
+  }
+
   return {
     recentFiles,
     currentFolder,
@@ -192,6 +293,11 @@ export function useFileOperations() {
     saveFile,
     saveAsFile,
     closeFile,
-    handleLinkClick
+    handleLinkClick,
+    createFileInDir,
+    createFolderInDir,
+    renamePath,
+    deletePath,
+    showInExplorer
   }
 }

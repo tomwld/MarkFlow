@@ -17,13 +17,20 @@ export function useShortcuts() {
   const { activeDocId } = useDocuments()
   const { closeFile } = useAppLifecycle()
   const { insertMarkdown, editTable } = useEditor()
-  const { toggleOutline, showEmojiPicker, showSidebar, showPreview } = useLayout()
+  const { toggleOutline, showEmojiPicker, showSidebar, showPreview, isFocusMode } = useLayout()
   
   const { 
     exportDocument 
   } = useExport()
 
   const handleKeydown = (e: KeyboardEvent) => {
+    // Toggle Focus Mode (F11)
+    if (e.key === 'F11') {
+      e.preventDefault()
+      isFocusMode.value = !isFocusMode.value
+      return
+    }
+
     if (e.ctrlKey || e.metaKey) {
       switch (e.key.toLowerCase()) {
         case 'n': e.preventDefault(); newFile(); break;
