@@ -13,6 +13,7 @@ export default {
     saveAs: '另存为',
     exportPdf: '导出为 PDF',
     exportHtml: '导出为 HTML',
+    exportWord: '导出为 Word',
     close: '关闭',
     recent: '最近打开',
     exit: '退出',

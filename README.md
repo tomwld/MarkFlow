@@ -53,6 +53,9 @@
 | `Ctrl/Cmd + Alt + C` | Insert Code Block |
 | `Ctrl/Cmd + K` | Insert Link |
 | `Ctrl/Cmd + I` | Insert Image |
+| `Ctrl/Cmd + Alt + P` | Export to PDF |
+| `Ctrl/Cmd + Alt + H` | Export to HTML |
+| `Ctrl/Cmd + Alt + W` | Export to Word |
 | `F11` | Toggle Focus Mode |
 
 ## 🛠️ Tech Stack

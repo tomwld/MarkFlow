@@ -13,6 +13,7 @@ export default {
     saveAs: 'Save As',
     exportPdf: 'Export to PDF',
     exportHtml: 'Export to HTML',
+    exportWord: 'Export to Word',
     close: 'Close',
     recent: 'Recent Files',
     exit: 'Exit',

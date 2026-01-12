@@ -92,6 +92,59 @@ ${htmlBody}
     await writeTextFile(path, htmlContent)
   }
 
+  const exportToWord = async (path: string) => {
+    if (!activeDocument.value) return
+    
+    const md: MarkdownIt = new MarkdownIt({
+      html: true,
+      breaks: true,
+      highlight: function (str: string, lang: string): string {
+        // Word doesn't support complex CSS well, so we might want simpler highlighting or none.
+        // But let's keep it consistent for now.
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return '<pre class="hljs"><code>' +
+                   hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                   '</code></pre>';
+          } catch (__) {}
+        }
+        return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+      }
+    })
+      .use(markdownItFootnote)
+      .use(markdownItTaskLists)
+
+    const htmlBody = md.render(activeDocument.value.content)
+    const title = activeDocument.value.title
+    
+    // Minimal Word-friendly HTML wrapper
+    const htmlContent = `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+${githubMarkdownLightCss}
+/* Ensure light mode for Word export as it prints better */
+.markdown-body {
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 45px;
+  background-color: white;
+  color: black;
+}
+</style>
+</head>
+<body class="markdown-body">
+${htmlBody}
+</body>
+</html>`
+
+    await writeTextFile(path, htmlContent)
+  }
+
   const exportToPdf = async (path: string) => {
     if (!activeDocument.value) return
     
@@ -200,7 +253,7 @@ ${htmlBody}
     }
   }
 
-  const exportDocument = async (format?: 'pdf' | 'html') => {
+  const exportDocument = async (format?: 'pdf' | 'html' | 'word') => {
     if (!activeDocument.value) return
     
     const title = activeDocument.value.title.replace(/\.(md|markdown)$/i, '') || 'Untitled'
@@ -210,9 +263,12 @@ ${htmlBody}
       filters.push({ name: 'PDF', extensions: ['pdf'] })
     } else if (format === 'html') {
       filters.push({ name: 'HTML', extensions: ['html'] })
+    } else if (format === 'word') {
+      filters.push({ name: 'Word Document', extensions: ['doc'] })
     } else {
       filters.push({ name: 'PDF', extensions: ['pdf'] })
       filters.push({ name: 'HTML', extensions: ['html'] })
+      filters.push({ name: 'Word Document', extensions: ['doc'] })
     }
 
     try {
@@ -226,6 +282,8 @@ ${htmlBody}
           await exportToPdf(selected)
         } else if (selected.endsWith('.html')) {
           await exportToHtml(selected)
+        } else if (selected.endsWith('.doc')) {
+          await exportToWord(selected)
         }
       }
     } catch (error) {

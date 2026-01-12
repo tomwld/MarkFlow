@@ -53,6 +53,9 @@
 | `Ctrl/Cmd + Alt + C` | 插入代码块 |
 | `Ctrl/Cmd + K` | 插入链接 |
 | `Ctrl/Cmd + I` | 插入图片 |
+| `Ctrl/Cmd + Alt + P` | 导出为 PDF |
+| `Ctrl/Cmd + Alt + H` | 导出为 HTML |
+| `Ctrl/Cmd + Alt + W` | 导出为 Word |
 | `F11` | 切换专注模式 |
 
 ## 🛠️ 技术栈
