@@ -15,6 +15,8 @@ import markdownItSup from 'markdown-it-sup'
 // @ts-ignore
 import markdownItDeflist from 'markdown-it-deflist'
 // @ts-ignore
+import markdownItKatex from 'markdown-it-katex'
+// @ts-ignore
 import githubMarkdownCss from 'github-markdown-css/github-markdown.css?inline'
 // @ts-ignore
 import hljs from 'highlight.js'
@@ -48,6 +50,7 @@ export async function exportToHtml(content: string, title: string, path: string)
       .use(markdownItSub)
       .use(markdownItSup)
       .use(markdownItDeflist)
+      .use(markdownItKatex)
 
     const htmlBody = md.render(content)
     
@@ -58,6 +61,7 @@ export async function exportToHtml(content: string, title: string, path: string)
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.27/dist/katex.min.css">
 <style>
 ${githubMarkdownCss}
 

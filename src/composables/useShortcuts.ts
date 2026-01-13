@@ -87,6 +87,12 @@ export function useShortcuts() {
           e.preventDefault();
           insertMarkdown('link');
           break;
+        case 'm':
+          if (e.altKey && e.ctrlKey) {
+            e.preventDefault();
+            insertMarkdown('math');
+          }
+          break;
         case 'i':
           e.preventDefault();
           insertMarkdown('image');

@@ -7,11 +7,14 @@ import mark from 'markdown-it-mark'
 import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import deflist from 'markdown-it-deflist'
+// @ts-ignore
+import markdownItKatex from 'markdown-it-katex'
 import { computed, watch, ref, onMounted, nextTick } from 'vue'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import mermaid from 'mermaid'
 import 'github-markdown-css/github-markdown.css'
 import 'highlight.js/styles/github.css'
+import 'katex/dist/katex.min.css'
 // @ts-ignore
 import hljs from 'highlight.js'
 
@@ -73,6 +76,7 @@ const md: MarkdownIt = new MarkdownIt({
   .use(sub)
   .use(sup)
   .use(deflist)
+  .use(markdownItKatex)
 
 const html = computed(() => md.render(props.content))
 

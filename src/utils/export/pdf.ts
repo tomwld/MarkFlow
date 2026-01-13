@@ -15,6 +15,8 @@ import markdownItSup from 'markdown-it-sup'
 // @ts-ignore
 import markdownItDeflist from 'markdown-it-deflist'
 // @ts-ignore
+import markdownItKatex from 'markdown-it-katex'
+// @ts-ignore
 import html2pdf from 'html2pdf.js'
 // @ts-ignore
 import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.css?inline'
@@ -23,6 +25,7 @@ import hljs from 'highlight.js'
 // @ts-ignore
 import hljsGithubCss from 'highlight.js/styles/github.css?inline'
 import mermaid from 'mermaid'
+import 'katex/dist/katex.min.css'
 
 export async function exportToPdf(content: string, title: string, path: string) {
     const md: MarkdownIt = new MarkdownIt({
@@ -49,6 +52,7 @@ export async function exportToPdf(content: string, title: string, path: string) 
       .use(markdownItSub)
       .use(markdownItSup)
       .use(markdownItDeflist)
+      .use(markdownItKatex)
 
     const htmlBody = md.render(content)
     

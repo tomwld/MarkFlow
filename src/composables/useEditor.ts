@@ -18,7 +18,7 @@ export function useEditor() {
     insertText(emoji)
   }
 
-  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock' | 'link' | 'image' | 'bold' | 'italic' | 'strikethrough' | 'heading' | 'unorderedList' | 'orderedList' | 'quote' | 'inlineCode' | 'mark' | 'subscript' | 'superscript' | 'horizontalRule' | 'mermaid') => {
+  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock' | 'link' | 'image' | 'bold' | 'italic' | 'strikethrough' | 'heading' | 'unorderedList' | 'orderedList' | 'quote' | 'inlineCode' | 'mark' | 'subscript' | 'superscript' | 'horizontalRule' | 'mermaid' | 'math') => {
     if (!editorRef.value) return
 
     let text = ''
@@ -64,6 +64,9 @@ export function useEditor() {
         break
       case 'mermaid':
         text = '\n```mermaid\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;\n```\n'
+        break
+      case 'math':
+        text = '\n$$\n\n$$\n'
         break
       case 'footnote':
         const content = activeDocument.value?.content || ''
