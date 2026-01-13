@@ -5,6 +5,16 @@ import markdownItFootnote from 'markdown-it-footnote'
 // @ts-ignore
 import markdownItTaskLists from 'markdown-it-task-lists'
 // @ts-ignore
+import markdownItAbbr from 'markdown-it-abbr'
+// @ts-ignore
+import markdownItMark from 'markdown-it-mark'
+// @ts-ignore
+import markdownItSub from 'markdown-it-sub'
+// @ts-ignore
+import markdownItSup from 'markdown-it-sup'
+// @ts-ignore
+import markdownItDeflist from 'markdown-it-deflist'
+// @ts-ignore
 import githubMarkdownCss from 'github-markdown-css/github-markdown.css?inline'
 // @ts-ignore
 import hljs from 'highlight.js'
@@ -18,6 +28,9 @@ export async function exportToHtml(content: string, title: string, path: string)
       html: true,
       breaks: true,
       highlight: function (str: string, lang: string): string {
+        if (lang === 'mermaid') {
+          return `<div class="mermaid">${str}</div>`
+        }
         if (lang && hljs.getLanguage(lang)) {
           try {
             return '<pre class="hljs"><code>' +
@@ -30,6 +43,11 @@ export async function exportToHtml(content: string, title: string, path: string)
     })
       .use(markdownItFootnote)
       .use(markdownItTaskLists)
+      .use(markdownItAbbr)
+      .use(markdownItMark)
+      .use(markdownItSub)
+      .use(markdownItSup)
+      .use(markdownItDeflist)
 
     const htmlBody = md.render(content)
     
@@ -39,6 +57,7 @@ export async function exportToHtml(content: string, title: string, path: string)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <style>
 ${githubMarkdownCss}
 
@@ -72,6 +91,9 @@ ${hljsGithubCss}
 </head>
 <body class="markdown-body">
 ${htmlBody}
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
 </body>
 </html>`
 

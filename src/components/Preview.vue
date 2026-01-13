@@ -7,8 +7,9 @@ import mark from 'markdown-it-mark'
 import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import deflist from 'markdown-it-deflist'
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, onUpdated, onMounted, nextTick } from 'vue'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import mermaid from 'mermaid'
 import 'github-markdown-css/github-markdown.css'
 import 'highlight.js/styles/github.css'
 // @ts-ignore
@@ -23,6 +24,13 @@ const emit = defineEmits<{
   (e: 'link-click', href: string): void
   (e: 'update:content', content: string): void
 }>()
+
+// Initialize mermaid
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose',
+})
 
 // Plugin to add data-line attribute
 const injectLineNumbers = (md: MarkdownIt) => {
@@ -42,6 +50,10 @@ const md: MarkdownIt = new MarkdownIt({
   typographer: true,
   breaks: true,
   highlight: function (str: string, lang: string): string {
+    if (lang === 'mermaid') {
+      return `<div class="mermaid">${str}</div>`
+    }
+
     if (lang && hljs.getLanguage(lang)) {
       try {
         return '<pre class="hljs"><code>' +
@@ -66,12 +78,35 @@ const html = computed(() => md.render(props.content))
 
 const containerRef = ref<HTMLElement | null>(null)
 
+const renderMermaid = async () => {
+  if (!containerRef.value) return
+  await nextTick()
+  const mermaidNodes = containerRef.value.querySelectorAll('.mermaid')
+  if (mermaidNodes.length > 0) {
+    try {
+        // Reset mermaid content if it was already rendered to avoid duplication or errors
+        // Actually mermaid.run handles this well if we just pass the nodes.
+        // However, if we re-render HTML, the DOM nodes are new.
+        await mermaid.run({
+            nodes: mermaidNodes
+        })
+    } catch (e) {
+        console.error('Mermaid render error:', e)
+    }
+  }
+}
+
 // Watch content change to reset scroll if needed or just handle re-render
 watch(() => props.content, () => {
   // Optional: maybe we don't want to scroll on content change unless cursor moves
   // But if we switch documents, content changes completely.
   // We should rely on cursorLine prop change to trigger scroll.
   // However, if we switch files, cursorLine might also change or stay similar but refer to different content.
+  renderMermaid()
+})
+
+onMounted(() => {
+    renderMermaid()
 })
 
 watch(() => props.cursorLine, (newLine) => {

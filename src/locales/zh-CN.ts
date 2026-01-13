@@ -90,6 +90,7 @@ export default {
     insertUnorderedList: '无序列表',
     insertOrderedList: '有序列表',
     insertHorizontalRule: '水平分割线',
+    insertMermaid: 'Mermaid 图表',
     insertFootnote: '插入脚注',
     insertTaskList: '插入任务列表',
     insertCodeBlock: '插入代码块',

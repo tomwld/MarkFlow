@@ -169,6 +169,9 @@ const onEmojiSelect = (emoji: string) => {
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertTable')" @click="insertMarkdown('table')">
         <div class="i-carbon-table text-lg"></div>
       </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertMermaid')" @click="insertMarkdown('mermaid')">
+        <div class="i-carbon-chart-relationship text-lg"></div>
+      </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertHorizontalRule')" @click="insertMarkdown('horizontalRule')">
         <div class="i-carbon-subtract text-lg"></div>
       </button>

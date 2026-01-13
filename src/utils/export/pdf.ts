@@ -5,6 +5,16 @@ import markdownItFootnote from 'markdown-it-footnote'
 // @ts-ignore
 import markdownItTaskLists from 'markdown-it-task-lists'
 // @ts-ignore
+import markdownItAbbr from 'markdown-it-abbr'
+// @ts-ignore
+import markdownItMark from 'markdown-it-mark'
+// @ts-ignore
+import markdownItSub from 'markdown-it-sub'
+// @ts-ignore
+import markdownItSup from 'markdown-it-sup'
+// @ts-ignore
+import markdownItDeflist from 'markdown-it-deflist'
+// @ts-ignore
 import html2pdf from 'html2pdf.js'
 // @ts-ignore
 import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.css?inline'
@@ -12,12 +22,16 @@ import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.cs
 import hljs from 'highlight.js'
 // @ts-ignore
 import hljsGithubCss from 'highlight.js/styles/github.css?inline'
+import mermaid from 'mermaid'
 
 export async function exportToPdf(content: string, title: string, path: string) {
     const md: MarkdownIt = new MarkdownIt({
       html: true,
       breaks: true,
       highlight: function (str: string, lang: string): string {
+        if (lang === 'mermaid') {
+          return `<div class="mermaid">${str}</div>`
+        }
         if (lang && hljs.getLanguage(lang)) {
           try {
             return '<pre class="hljs"><code>' +
@@ -30,6 +44,11 @@ export async function exportToPdf(content: string, title: string, path: string) 
     })
       .use(markdownItFootnote)
       .use(markdownItTaskLists)
+      .use(markdownItAbbr)
+      .use(markdownItMark)
+      .use(markdownItSub)
+      .use(markdownItSup)
+      .use(markdownItDeflist)
 
     const htmlBody = md.render(content)
     
@@ -86,6 +105,14 @@ export async function exportToPdf(content: string, title: string, path: string) 
     }
     
     document.body.appendChild(wrapper)
+
+    // Render Mermaid diagrams
+    const mermaidElements = wrapper.querySelectorAll('.mermaid')
+    if (mermaidElements.length > 0) {
+      mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' })
+      // @ts-ignore
+      await mermaid.run({ nodes: mermaidElements })
+    }
 
     try {
       window.scrollTo(0, 0)

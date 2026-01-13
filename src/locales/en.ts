@@ -90,6 +90,7 @@ export default {
     insertUnorderedList: 'Unordered List',
     insertOrderedList: 'Ordered List',
     insertHorizontalRule: 'Horizontal Rule',
+    insertMermaid: 'Mermaid Diagram',
     insertFootnote: 'Insert Footnote',
     insertTaskList: 'Insert Task List',
     insertCodeBlock: 'Insert Code Block',
