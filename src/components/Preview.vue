@@ -10,6 +10,7 @@ import deflist from 'markdown-it-deflist'
 // @ts-ignore
 import markdownItKatex from 'markdown-it-katex'
 import { computed, watch, ref, onMounted, nextTick } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import mermaid from 'mermaid'
 import 'github-markdown-css/github-markdown.css'
@@ -21,11 +22,13 @@ import hljs from 'highlight.js'
 const props = defineProps<{
   content: string
   cursorLine?: number
+  scrollLine?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'link-click', href: string): void
   (e: 'update:content', content: string): void
+  (e: 'scroll', line: number): void
 }>()
 
 // Initialize mermaid
@@ -53,10 +56,6 @@ const md: MarkdownIt = new MarkdownIt({
   typographer: true,
   breaks: true,
   highlight: function (str: string, lang: string): string {
-    if (lang === 'mermaid') {
-      return `<div class="mermaid">${str}</div>`
-    }
-
     if (lang && hljs.getLanguage(lang)) {
       try {
         return '<pre class="hljs"><code>' +
@@ -78,27 +77,56 @@ const md: MarkdownIt = new MarkdownIt({
   .use(deflist)
   .use(markdownItKatex)
 
+// Override fence rule to inject data-line for code blocks and mermaid
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  const token = tokens[idx]
+  const line = token.map ? String(token.map[0]) : ''
+  const info = token.info ? md.utils.unescapeAll(token.info).trim() : ''
+  const lang = info.split(/\s+/g)[0]
+
+  if (lang === 'mermaid') {
+     return `<div class="mermaid-wrapper" ${line ? `data-line="${line}"` : ''}><div class="mermaid">${token.content}</div></div>`
+   }
+   
+   let highlighted = ''
+  if (options.highlight) {
+    highlighted = options.highlight(token.content, lang, '') || md.utils.escapeHtml(token.content)
+  } else {
+    highlighted = md.utils.escapeHtml(token.content)
+  }
+
+  if (highlighted.startsWith('<pre')) {
+    return highlighted.replace('<pre', `<pre ${line ? `data-line="${line}"` : ''}`)
+  }
+
+  return `<pre ${line ? `data-line="${line}"` : ''}><code${lang ? ` class="language-${lang}"` : ''}>${highlighted}</code></pre>\n`
+}
+
 const html = computed(() => md.render(props.content))
 
 const containerRef = ref<HTMLElement | null>(null)
 
-const renderMermaid = async () => {
+const renderMermaid = useDebounceFn(async () => {
   if (!containerRef.value) return
   await nextTick()
   const mermaidNodes = Array.from(containerRef.value.querySelectorAll('.mermaid')) as HTMLElement[]
   if (mermaidNodes.length > 0) {
     try {
-        // Reset mermaid content if it was already rendered to avoid duplication or errors
-        // Actually mermaid.run handles this well if we just pass the nodes.
-        // However, if we re-render HTML, the DOM nodes are new.
         await mermaid.run({
             nodes: mermaidNodes
         })
+        // Mermaid rendering changes content height, so we need to re-apply scroll position
+        // to ensure the view is correctly positioned, especially for large diagrams
+        if (props.scrollLine !== undefined) {
+            await nextTick()
+            scrollToLine(props.scrollLine)
+        }
     } catch (e) {
-        console.error('Mermaid render error:', e)
+        // Suppress errors during editing/typing to avoid console noise
+        console.debug('Mermaid render error:', e)
     }
   }
-}
+}, 300)
 
 // Watch content change to reset scroll if needed or just handle re-render
 watch(() => props.content, () => {
@@ -124,6 +152,112 @@ watch(() => props.cursorLine, (newLine) => {
     scrollToCursor(newLine)
   }, 50)
 })
+
+const isProgrammaticScroll = ref(false)
+
+watch(() => props.scrollLine, (newLine) => {
+  if (newLine === undefined || !containerRef.value) return
+  isProgrammaticScroll.value = true
+  scrollToLine(newLine)
+  // Reset flag after a short delay to allow scroll event to fire
+  setTimeout(() => {
+    isProgrammaticScroll.value = false
+  }, 100)
+})
+
+const onScroll = () => {
+  if (isProgrammaticScroll.value || !containerRef.value) return
+  
+  const container = containerRef.value
+  const scrollTop = container.scrollTop
+  const elements = Array.from(container.querySelectorAll('[data-line]')) as HTMLElement[]
+  
+  // Find element at or just below top
+  // Or rather, find the last element whose top is <= container top + offset
+  // Actually we want the element that is currently at the top of the viewport
+  
+  let currentLine = 1
+  let minDiff = Infinity
+  
+  for (const el of elements) {
+    const line = parseInt(el.getAttribute('data-line') || '-1')
+    if (isNaN(line)) continue
+    
+    // Relative position to container top
+    const top = el.offsetTop - container.offsetTop
+    const diff = Math.abs(top - scrollTop)
+    
+    // Simple heuristic: if element top is close to scrollTop, or just above it
+    if (top <= scrollTop + 20) { // +20 buffer
+       // keep tracking the highest line number that is "above or at" the fold
+       // But data-line might not be strictly ordered in DOM if structure is complex, though usually it is.
+       currentLine = line
+    } else {
+        // Since elements are usually in order, if we pass the fold, we can stop?
+        // Not necessarily if nested. But good enough.
+    }
+  }
+  
+  emit('scroll', currentLine)
+}
+
+const scrollToLine = (newLine: number) => {
+  if (!containerRef.value) return
+  const targetLine = newLine - 1
+  const container = containerRef.value
+  const elements = Array.from(container.querySelectorAll('[data-line]')) as HTMLElement[]
+  
+  let currentEl: HTMLElement | null = null
+  let nextEl: HTMLElement | null = null
+  let currentIndex = -1
+
+  // Find the element matching the target line
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i]
+    const line = parseInt(el.getAttribute('data-line') || '-1')
+    
+    if (!isNaN(line) && line <= targetLine) {
+      if (!currentEl || line > parseInt(currentEl.getAttribute('data-line') || '-1')) {
+        currentEl = el
+        currentIndex = i
+      }
+    }
+  }
+
+  if (currentEl) {
+    // Try to find the next element to calculate ratio
+    if (currentIndex !== -1 && currentIndex + 1 < elements.length) {
+        nextEl = elements[currentIndex + 1]
+    }
+
+    const currentLine = parseInt(currentEl.getAttribute('data-line') || '0')
+    let ratio = 0
+    
+    // If we have a next element, we can calculate the ratio within the block
+    if (nextEl) {
+        const nextLine = parseInt(nextEl.getAttribute('data-line') || '-1')
+        if (nextLine > currentLine && nextLine > targetLine) {
+            const totalLines = nextLine - currentLine
+            const lineDiff = targetLine - currentLine
+            ratio = Math.max(0, Math.min(lineDiff / totalLines, 1))
+        }
+    }
+    
+    // Calculate target scroll position
+    // We use offsetTop to get relative position to the container (which is positioned relative)
+    // And add ratio * height for smooth scrolling within large blocks (like charts/tables)
+    let targetScrollTop = currentEl.offsetTop + (currentEl.offsetHeight * ratio)
+    
+    // Ensure we don't scroll past bounds
+    const maxScroll = container.scrollHeight - container.clientHeight
+    targetScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll))
+    
+    container.scrollTo({
+        top: targetScrollTop,
+        behavior: 'auto'
+    })
+  }
+}
 
 const scrollToCursor = (newLine: number) => {
   if (!containerRef.value) return
@@ -227,7 +361,7 @@ const handleClick = async (event: MouseEvent) => {
 </script>
 
 <template>
-  <div ref="containerRef" class="h-full w-full overflow-y-auto bg-white dark:bg-[#282c34] scroll-smooth">
+  <div ref="containerRef" class="h-full w-full overflow-y-auto bg-white dark:bg-[#282c34] relative" @scroll="onScroll">
     <div 
       class="markdown-body p-8 min-h-full"
       v-html="html"

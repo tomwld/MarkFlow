@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Codemirror } from 'vue-codemirror'
-import { markdown } from '@codemirror/lang-markdown'
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { languages as codeLanguages } from '@codemirror/language-data'
+import { GFM, Subscript, Superscript, Emoji } from '@lezer/markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { autocompletion, CompletionContext } from '@codemirror/autocomplete'
 import { search, searchKeymap } from '@codemirror/search'
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useDark } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
@@ -39,6 +41,7 @@ const codeBlockLanguageCompletion = (context: CompletionContext) => {
 const props = defineProps<{
   modelValue: string
   scrollToLine?: number
+  syncScrollLine?: number
   initialCursorLine?: number
   initialCursorCol?: number
 }>()
@@ -46,12 +49,28 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'cursor-change', line: number, col: number): void
+  (e: 'scroll', line: number): void
 }>()
 
 const view = ref<EditorView | null>(null)
 
+const isProgrammaticScroll = ref(false)
+
 const handleReady = (payload: { view: EditorView }) => {
   view.value = payload.view
+  
+  // Attach scroll listener
+  const scrollDom = view.value.scrollDOM
+  scrollDom.addEventListener('scroll', () => {
+    if (view.value && !isProgrammaticScroll.value) {
+      const scrollTop = scrollDom.scrollTop
+      // Get the line at the top of the viewport
+      // We add a small offset (e.g. 5px) to ensure we get the line inside the viewport
+      const lineBlock = view.value.lineBlockAtHeight(scrollTop + 5)
+      const line = view.value.state.doc.lineAt(lineBlock.from).number
+      emit('scroll', line)
+    }
+  })
   
   // Restore cursor if provided
   if (props.initialCursorLine && view.value) {
@@ -86,11 +105,38 @@ watch(() => props.scrollToLine, (line) => {
   }
 })
 
+watch(() => props.syncScrollLine, (line) => {
+  if (line && view.value) {
+    const doc = view.value.state.doc
+    if (line > 0 && line <= doc.lines) {
+      const lineInfo = doc.line(line)
+      
+      // Set flag to ignore scroll event
+      isProgrammaticScroll.value = true
+      
+      view.value.dispatch({
+        // Do NOT move selection/cursor for sync scroll
+        // scrollIntoView: true, 
+        effects: EditorView.scrollIntoView(lineInfo.from, { y: 'start' })
+      })
+      
+      // Reset flag after delay
+      setTimeout(() => {
+        isProgrammaticScroll.value = false
+      }, 100)
+    }
+  }
+})
+
 const isDark = useDark()
 
 const extensions = computed(() => {
   const exts = [
-    markdown(), 
+    markdown({
+      base: markdownLanguage,
+      codeLanguages: codeLanguages,
+      extensions: [GFM, Subscript, Superscript, Emoji]
+    }), 
     autocompletion({ override: [codeBlockLanguageCompletion] }),
     search(),
     keymap.of(searchKeymap),
@@ -533,6 +579,39 @@ const contextMenuX = ref(0)
 const contextMenuY = ref(0)
 const contextMenuType = ref<'table' | 'taskList' | null>(null)
 
+const contextMenuRef = ref<HTMLElement | null>(null)
+const adjustedX = ref(0)
+const adjustedY = ref(0)
+const isPositioned = ref(false)
+
+watch(contextMenuVisible, async (visible) => {
+  if (visible) {
+    isPositioned.value = false
+    adjustedX.value = contextMenuX.value
+    adjustedY.value = contextMenuY.value
+    
+    await nextTick()
+    
+    if (contextMenuRef.value) {
+      const rect = contextMenuRef.value.getBoundingClientRect()
+      const winWidth = window.innerWidth
+      const winHeight = window.innerHeight
+      
+      // Check vertical overflow
+      if (adjustedY.value + rect.height > winHeight) {
+        adjustedY.value = Math.max(0, adjustedY.value - rect.height)
+      }
+      
+      // Check horizontal overflow
+      if (adjustedX.value + rect.width > winWidth) {
+        adjustedX.value = Math.max(0, adjustedX.value - rect.width)
+      }
+      
+      isPositioned.value = true
+    }
+  }
+})
+
 const isTaskListLine = (text: string) => {
   return /^(\s*[-*+]\s+)\[([ xX])\]/.test(text)
 }
@@ -624,8 +703,9 @@ const toggleTaskStatus = (completed: boolean) => {
     <!-- Context Menu -->
     <div 
       v-if="contextMenuVisible"
+      ref="contextMenuRef"
       class="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-md py-1 text-sm text-gray-700 dark:text-gray-200 min-w-[160px]"
-      :style="{ left: `${contextMenuX}px`, top: `${contextMenuY}px` }"
+      :style="{ left: `${adjustedX}px`, top: `${adjustedY}px`, visibility: isPositioned ? 'visible' : 'hidden' }"
       @click.stop
     >
       <template v-if="contextMenuType === 'table'">

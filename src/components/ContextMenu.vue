@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 
 export interface MenuItem {
@@ -24,6 +24,8 @@ const emit = defineEmits<{
 }>()
 
 const menuRef = ref<HTMLElement | null>(null)
+const adjustedX = ref(0)
+const adjustedY = ref(0)
 
 onClickOutside(menuRef, () => {
   if (props.visible) {
@@ -32,11 +34,42 @@ onClickOutside(menuRef, () => {
   }
 })
 
+watch(
+  [() => props.visible, () => props.x, () => props.y],
+  async ([visible, x, y]) => {
+    if (visible) {
+      // Initially set to the click position
+      adjustedX.value = x
+      adjustedY.value = y
+      
+      await nextTick()
+      
+      if (menuRef.value) {
+        const rect = menuRef.value.getBoundingClientRect()
+        const winWidth = window.innerWidth
+        const winHeight = window.innerHeight
+        
+        // Check vertical overflow
+        // If the menu goes off the bottom of the screen, show it above the cursor
+        if (y + rect.height > winHeight) {
+          adjustedY.value = Math.max(0, y - rect.height)
+        }
+        
+        // Check horizontal overflow
+        // If the menu goes off the right of the screen, show it to the left of the cursor
+        if (x + rect.width > winWidth) {
+          adjustedX.value = Math.max(0, x - rect.width)
+        }
+      }
+    }
+  },
+  { immediate: true }
+)
+
 const style = computed(() => {
-  // Basic bounds checking could be added here
   return {
-    top: `${props.y}px`,
-    left: `${props.x}px`
+    top: `${adjustedY.value}px`,
+    left: `${adjustedX.value}px`
   }
 })
 </script>

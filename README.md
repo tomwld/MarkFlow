@@ -9,8 +9,8 @@
 
 ## ✨ Features
 
-- **📝 Modern Editor**: Built on CodeMirror 6, offering a smooth typing experience with syntax highlighting.
-- **👀 Real-time Preview**: Instant Markdown rendering with synchronized scrolling and cursor positioning.
+- **📝 Modern Editor**: Built on CodeMirror 6, offering a smooth typing experience with syntax highlighting, including support for GFM, Subscript, Superscript, and Emojis.
+- **👀 Real-time Preview**: Instant Markdown rendering with synchronized scrolling (Editor to Preview) and cursor positioning.
 - **🌗 Themeable**: Native support for Light and Dark modes.
 - **📂 File Management**: 
   - Integrated File Tree and Outline view (Toggleable sidebar sections).
@@ -24,10 +24,13 @@
   - **Context Menu**: "Open with MarkFlow" option in File Explorer.
 - **🛠️ Productivity Tools**:
   - **Focus Mode**: Distraction-free writing.
+  - **Visual Mermaid Editor**: Bi-directional Mermaid Diagram support: Write code or edit visually.
+  - **Extended Syntax**: Support for GFM, Subscript (~sub~), Superscript (^sup^), and Emoji codes (:smile:).
+  - **Math Support**: Render LaTeX math equations using KaTeX.
   - **Interactive Preview**: Clickable task lists and links in the preview window.
   - **Code Highlighting**: Syntax highlighting for code blocks in both editor and preview.
   - **Emoji Picker**: Easily insert emojis into your documents.
-  - **Toolbar Shortcuts**: Quick access to tables, footnotes, task lists, and code blocks.
+  - **Toolbar Shortcuts**: Quick access to tables, footnotes, task lists, code blocks, and math formulas.
   - **Status Bar**: Real-time word count, line count, and cursor position.
 - **🌍 Internationalization**: Full support for English and Simplified Chinese (简体中文).
 - **📤 Export**: Export documents to styled HTML and PDF.
@@ -53,8 +56,7 @@
 | `Ctrl/Cmd + Alt + C` | Insert Code Block |
 | `Ctrl/Cmd + K` | Insert Link |
 | `Ctrl/Cmd + I` | Insert Image |
-| `Ctrl/Cmd + Alt + P` | Export to PDF |
-| `Ctrl/Cmd + Alt + H` | Export to HTML |
+| `Ctrl/Cmd + Alt + M` | Insert Math Formula |
 | `F11` | Toggle Focus Mode |
 
 ## 🛠️ Tech Stack
@@ -64,7 +66,11 @@
 - **Styling**: [UnoCSS](https://unocss.dev/) (Atomic CSS)
 - **State Management**: Vue Composition API + [VueUse](https://vueuse.org/)
 - **Editor Engine**: [CodeMirror](https://codemirror.net/)
+- **Extended Syntax**: [@lezer/markdown](https://github.com/lezer-parser/markdown)
 - **Markdown Parsing**: [markdown-it](https://github.com/markdown-it/markdown-it)
+- **Visual Editor**: [Vue Flow](https://vueflow.dev/) (Mermaid Editor)
+- **Diagrams**: [Mermaid](https://mermaid.js.org/)
+- **Math Rendering**: [KaTeX](https://katex.org/)
 
 ## 🚀 Getting Started
 

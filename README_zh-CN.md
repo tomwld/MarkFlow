@@ -9,8 +9,8 @@
 
 ## ✨ 特性
 
-- **📝 现代编辑器**: 基于 CodeMirror 6 构建，提供流畅的输入体验和语法高亮。
-- **👀 实时预览**: 即时 Markdown 渲染，支持滚动同步和光标位置同步。
+- **📝 现代编辑器**: 基于 CodeMirror 6 构建，提供流畅的输入体验和语法高亮，支持 GFM、上标、下标和 Emoji 语法。
+- **👀 实时预览**: 即时 Markdown 渲染，支持编辑器到预览的单向滚动同步和光标位置同步。
 - **🌗 主题切换**: 原生支持明亮和暗黑模式。
 - **📂 文件管理**: 
   - 集成文件树和大纲视图（可切换侧边栏部分）。
@@ -24,10 +24,13 @@
   - **上下文菜单**: 资源管理器中支持“使用 MarkFlow 打开”选项。
 - **🛠️ 生产力工具**:
   - **专注模式**: 无干扰写作体验。
+  - **可视化 Mermaid 编辑器**: 双向 Mermaid 图表支持：编写代码或可视化编辑。
+  - **扩展语法**: 支持 GFM、上标 (~sub~)、下标 (^sup^) 和 Emoji 代码 (:smile:)。
+  - **数学公式支持**: 使用 KaTeX 渲染 LaTeX 数学公式。
   - **交互式预览**: 预览窗口支持点击任务列表和链接。
   - **代码高亮**: 预览窗口支持代码块语法高亮。
   - **表情选择器**: 轻松在文档中插入表情符号。
-  - **工具栏快捷键**: 快速插入表格、脚注、任务列表和代码块。
+  - **工具栏快捷键**: 快速插入表格、脚注、任务列表、代码块和数学公式。
   - **状态栏**: 实时显示字数、行数和光标位置。
 - **🌍 国际化**: 完整支持英语和简体中文。
 - **📤 导出**: 将文档导出为带样式的 HTML 和 PDF 文件。
@@ -53,8 +56,7 @@
 | `Ctrl/Cmd + Alt + C` | 插入代码块 |
 | `Ctrl/Cmd + K` | 插入链接 |
 | `Ctrl/Cmd + I` | 插入图片 |
-| `Ctrl/Cmd + Alt + P` | 导出为 PDF |
-| `Ctrl/Cmd + Alt + H` | 导出为 HTML |
+| `Ctrl/Cmd + Alt + M` | 插入数学公式 |
 | `F11` | 切换专注模式 |
 
 ## 🛠️ 技术栈
@@ -64,7 +66,11 @@
 - **样式**: [UnoCSS](https://unocss.dev/) (Atomic CSS)
 - **状态管理**: Vue Composition API + [VueUse](https://vueuse.org/)
 - **编辑器引擎**: [CodeMirror](https://codemirror.net/)
+- **扩展语法**: [@lezer/markdown](https://github.com/lezer-parser/markdown)
 - **Markdown 解析**: [markdown-it](https://github.com/markdown-it/markdown-it)
+- **可视化编辑器**: [Vue Flow](https://vueflow.dev/) (Mermaid 编辑器)
+- **图表渲染**: [Mermaid](https://mermaid.js.org/)
+- **数学渲染**: [KaTeX](https://katex.org/)
 
 ## 🚀 快速开始
 

@@ -142,6 +142,9 @@ const {
   handleCursorChange 
 } = useEditor()
 
+const editorScrollLine = ref<number>(1) // Line to scroll Editor to (from Preview)
+const previewScrollLine = ref<number>(1) // Line to scroll Preview to (from Editor)
+
 const { newFile, openFile, openFolder } = useFileOperations()
 </script>
 
@@ -221,10 +224,12 @@ const { newFile, openFile, openFolder } = useFileOperations()
             :key="activeDocument.id"
             :model-value="activeDocument.content"
             :scroll-to-line="scrollToLine ?? undefined"
+            :sync-scroll-line="editorScrollLine"
             :initial-cursor-line="activeDocument.cursorLine"
             :initial-cursor-col="activeDocument.cursorCol"
             @update:model-value="(val) => { if(activeDocument) { activeDocument.content = val; activeDocument.isModified = true; } }"
             @cursor-change="handleCursorChange"
+            @scroll="(line) => previewScrollLine = line"
           />
         </div>
         
@@ -244,6 +249,7 @@ const { newFile, openFile, openFolder } = useFileOperations()
           <Preview 
             :content="activeDocument.content" 
             :cursor-line="activeDocument.cursorLine"
+            :scroll-line="previewScrollLine"
             @link-click="handleLinkClick"
             @update:content="(newContent) => { if(activeDocument) { activeDocument.content = newContent; activeDocument.isModified = true; } }"
           />
