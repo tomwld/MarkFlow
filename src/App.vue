@@ -190,6 +190,7 @@ onMounted(async () => {
         case 'insert-footnote': insertMarkdown('footnote'); break;
         case 'insert-tasklist': insertMarkdown('tasklist'); break;
         case 'insert-codeblock': insertMarkdown('codeblock'); break;
+        case 'insert-math': insertMarkdown('math'); break;
         case 'insert-link': insertMarkdown('link'); break;
         case 'insert-image': insertMarkdown('image'); break;
         case 'insert-emoji': showEmojiPicker.value = true; break;

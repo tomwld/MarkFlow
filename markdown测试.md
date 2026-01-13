@@ -85,66 +85,27 @@ flowchart TD
 ```
 这是一个行内公式：$E = mc^2$，它是爱因斯坦的质能方程。
 
-圆的面积公式是 $A = \pi r^2$，其中 $r$ 是半径。
+圆的面积公式是 $A=\pi r^{2}$，其中 $r$是半径。
 
-二次方程的解为：$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
 ## 复杂的数学公式
 <!-- 时间复杂度 -->
-$$O(1) < O(\log n) < O(n) < O(n \log n) < O(n^2) < O(2^n) < O(n!)$$
+$$
+O(1) < O(\log n) < O(n) < O(n \log n) < O(n^2) < O(2^n) < O(n!)
+$$
 
 <!-- 递推关系 -->
-$$T(n) = \begin{cases}
+$$
+T(n) = \begin{cases}
 1 & \text{if } n = 1 \\
 2T(n/2) + O(n) & \text{if } n > 1
-\end{cases}$$
+\end{cases}
+$$
 
 <!-- 主定理 -->
-$$T(n) = aT(n/b) + f(n)$$
+$$
+T(n) = aT(n/b) + f(n)
+$$
 其中，$a \geq 1$，$b > 1$，$f(n)$ 是渐近正函数。
-
-## 数学定理
-<!-- 傅里叶变换 -->
-$$\mathcal{F}\{f(t)\} = F(\omega) = \int_{-\infty}^{\infty} f(t) e^{-i\omega t} dt$$
-
-<!-- 泰勒展开 -->
-$$f(x) = \sum_{n=0}^{\infty} \frac{f^{(n)}(a)}{n!}(x-a)^n$$
-
-<!-- 欧拉公式 -->
-$$e^{i\theta} = \cos\theta + i\sin\theta$$
-
-<!-- 高斯积分 -->
-$$\int_{-\infty}^{\infty} e^{-ax^2} dx = \sqrt{\frac{\pi}{a}} \quad (a > 0)$$
-
-<!-- 贝叶斯定理 -->
-$$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$$
-
-## 物理公式
-### 薛定谔方程
-$$
-i\hbar\frac{\partial}{\partial t}\Psi(\mathbf{r},t) = \hat{H}\Psi(\mathbf{r},t
-)
-$$
-### 洛伦兹变换
-$$
-\begin{pmatrix}
-ct' \\
-x' \\
-y' \\
-z'
-\end{pmatrix} = 
-\begin{pmatrix}
-\gamma & -\gamma v/c & 0 & 0 \\
--\gamma v/c & \gamma & 0 & 0 \\
-0 & 0 & 1 & 0 \\
-0 & 0 & 0 & 1
-\end{pmatrix}
-\begin{pmatrix}
-ct \\
-x \\
-y \\
-z
-\end{pmatrix}
-$$
 
 
 [^5]: 两岸晓烟

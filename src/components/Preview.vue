@@ -9,8 +9,9 @@ import sup from 'markdown-it-sup'
 import deflist from 'markdown-it-deflist'
 // @ts-ignore
 import markdownItKatex from 'markdown-it-katex'
+import katex from 'katex'
 import { computed, watch, ref, onMounted, nextTick } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useDark } from '@vueuse/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import mermaid from 'mermaid'
 import 'github-markdown-css/github-markdown.css'
@@ -77,8 +78,31 @@ const md: MarkdownIt = new MarkdownIt({
   .use(deflist)
   .use(markdownItKatex)
 
+// Override katex renderer rules to use the latest katex version
+md.renderer.rules.math_inline = (tokens, idx) => {
+  try {
+    return katex.renderToString(tokens[idx].content, { 
+      throwOnError: false, 
+      displayMode: false 
+    })
+  } catch (e) {
+    return tokens[idx].content
+  }
+}
+
+md.renderer.rules.math_block = (tokens, idx) => {
+  try {
+    return '<div class="katex-block">' + katex.renderToString(tokens[idx].content, { 
+      throwOnError: false, 
+      displayMode: true 
+    }) + '</div>'
+  } catch (e) {
+    return tokens[idx].content
+  }
+}
+
 // Override fence rule to inject data-line for code blocks and mermaid
-md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+md.renderer.rules.fence = (tokens, idx, options, _env, _self) => {
   const token = tokens[idx]
   const line = token.map ? String(token.map[0]) : ''
   const info = token.info ? md.utils.unescapeAll(token.info).trim() : ''
@@ -102,12 +126,30 @@ md.renderer.rules.fence = (tokens, idx, options, env, self) => {
   return `<pre ${line ? `data-line="${line}"` : ''}><code${lang ? ` class="language-${lang}"` : ''}>${highlighted}</code></pre>\n`
 }
 
-const html = computed(() => md.render(props.content))
+const isDark = useDark()
+
+const html = computed(() => {
+  // Trigger re-render when theme changes
+  // Access isDark.value to create dependency
+  if (isDark.value) { /* empty */ }
+  return md.render(props.content)
+})
 
 const containerRef = ref<HTMLElement | null>(null)
 
 const renderMermaid = useDebounceFn(async () => {
   if (!containerRef.value) return
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark.value ? 'dark' : 'neutral',
+    securityLevel: 'loose',
+    themeVariables: {
+      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif',
+      fontSize: '16px'
+    }
+  })
+
   await nextTick()
   const mermaidNodes = Array.from(containerRef.value.querySelectorAll('.mermaid')) as HTMLElement[]
   if (mermaidNodes.length > 0) {
@@ -129,7 +171,7 @@ const renderMermaid = useDebounceFn(async () => {
 }, 300)
 
 // Watch content change to reset scroll if needed or just handle re-render
-watch(() => props.content, () => {
+watch(html, () => {
   // Optional: maybe we don't want to scroll on content change unless cursor moves
   // But if we switch documents, content changes completely.
   // We should rely on cursorLine prop change to trigger scroll.
@@ -177,7 +219,6 @@ const onScroll = () => {
   // Actually we want the element that is currently at the top of the viewport
   
   let currentLine = 1
-  let minDiff = Infinity
   
   for (const el of elements) {
     const line = parseInt(el.getAttribute('data-line') || '-1')
@@ -185,7 +226,6 @@ const onScroll = () => {
     
     // Relative position to container top
     const top = el.offsetTop - container.offsetTop
-    const diff = Math.abs(top - scrollTop)
     
     // Simple heuristic: if element top is close to scrollTop, or just above it
     if (top <= scrollTop + 20) { // +20 buffer
@@ -234,9 +274,23 @@ const scrollToLine = (newLine: number) => {
     let ratio = 0
     
     // If we have a next element, we can calculate the ratio within the block
+    let nextLine = -1
+    
     if (nextEl) {
-        const nextLine = parseInt(nextEl.getAttribute('data-line') || '-1')
-        if (nextLine > currentLine && nextLine > targetLine) {
+        nextLine = parseInt(nextEl.getAttribute('data-line') || '-1')
+    } else {
+        // If no next element, assume the block extends to the end of the document
+        nextLine = props.content.split(/\r?\n/).length
+    }
+
+    if (nextLine > currentLine && nextLine > targetLine) {
+        // Check if currentEl is a mermaid block
+        const isMermaid = currentEl.classList.contains('mermaid-wrapper') || currentEl.querySelector('.mermaid')
+        
+        if (isMermaid) {
+            // For mermaid diagrams, lock to the top (ratio = 0) to avoid jumping inside the chart
+            ratio = 0
+        } else {
             const totalLines = nextLine - currentLine
             const lineDiff = targetLine - currentLine
             ratio = Math.max(0, Math.min(lineDiff / totalLines, 1))

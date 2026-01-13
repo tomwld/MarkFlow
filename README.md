@@ -68,7 +68,6 @@
 - **Editor Engine**: [CodeMirror](https://codemirror.net/)
 - **Extended Syntax**: [@lezer/markdown](https://github.com/lezer-parser/markdown)
 - **Markdown Parsing**: [markdown-it](https://github.com/markdown-it/markdown-it)
-- **Visual Editor**: [Vue Flow](https://vueflow.dev/) (Mermaid Editor)
 - **Diagrams**: [Mermaid](https://mermaid.js.org/)
 - **Math Rendering**: [KaTeX](https://katex.org/)
 

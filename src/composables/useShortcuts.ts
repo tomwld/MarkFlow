@@ -88,7 +88,7 @@ export function useShortcuts() {
           insertMarkdown('link');
           break;
         case 'm':
-          if (e.altKey && e.ctrlKey) {
+          if (e.altKey) {
             e.preventDefault();
             insertMarkdown('math');
           }

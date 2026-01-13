@@ -14,6 +14,7 @@ import { EditorSelection, EditorState } from '@codemirror/state'
 import { 
   parseTable, formatTable, addRow, deleteRow, addColumn, deleteColumn, getColumnIndex, isTableLine 
 } from '../utils/table'
+import { MathExtension } from '../utils/codemirror-math'
 
 const { t } = useI18n()
 
@@ -135,7 +136,7 @@ const extensions = computed(() => {
     markdown({
       base: markdownLanguage,
       codeLanguages: codeLanguages,
-      extensions: [GFM, Subscript, Superscript, Emoji]
+      extensions: [GFM, Subscript, Superscript, Emoji, MathExtension]
     }), 
     autocompletion({ override: [codeBlockLanguageCompletion] }),
     search(),

@@ -68,7 +68,6 @@
 - **编辑器引擎**: [CodeMirror](https://codemirror.net/)
 - **扩展语法**: [@lezer/markdown](https://github.com/lezer-parser/markdown)
 - **Markdown 解析**: [markdown-it](https://github.com/markdown-it/markdown-it)
-- **可视化编辑器**: [Vue Flow](https://vueflow.dev/) (Mermaid 编辑器)
 - **图表渲染**: [Mermaid](https://mermaid.js.org/)
 - **数学渲染**: [KaTeX](https://katex.org/)
 

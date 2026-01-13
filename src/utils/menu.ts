@@ -27,6 +27,7 @@ export const updateMenuLanguage = async (t: Composer['t']) => {
     insertFootnote: t('menu.insertFootnote'),
     insertTaskList: t('menu.insertTaskList'),
     insertCodeBlock: t('menu.insertCodeBlock'),
+    insertMath: t('menu.insertMath'),
     insertLink: t('menu.insertLink'),
     insertImage: t('menu.insertImage'),
     insertEmoji: t('menu.insertEmoji'),

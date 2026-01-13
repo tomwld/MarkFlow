@@ -97,6 +97,7 @@ struct MenuLabels {
     insert_link: String,
     insert_image: String,
     insert_emoji: String,
+    insert_math: String,
 }
 
 impl Default for MenuLabels {
@@ -137,6 +138,7 @@ impl Default for MenuLabels {
             insert_link: "Link".into(),
             insert_image: "Image".into(),
             insert_emoji: "Emoji".into(),
+            insert_math: "Math Formula".into(),
         }
     }
 }
@@ -196,12 +198,14 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let insert_link_i = MenuItem::with_id(handle, "insert-link", &labels.insert_link, true, Some("CmdOrCtrl+K"))?;
     let insert_image_i = MenuItem::with_id(handle, "insert-image", &labels.insert_image, true, Some("CmdOrCtrl+I"))?;
     let insert_emoji_i = MenuItem::with_id(handle, "insert-emoji", &labels.insert_emoji, true, Some("CmdOrCtrl+E"))?;
+    let insert_math_i = MenuItem::with_id(handle, "insert-math", &labels.insert_math, true, Some("CmdOrCtrl+Alt+M"))?;
 
     let insert_items: Vec<&dyn IsMenuItem<Wry>> = vec![
         &insert_table_i,
         &insert_footnote_i,
         &insert_tasklist_i,
         &insert_codeblock_i,
+        &insert_math_i,
         &insert_link_i,
         &insert_image_i,
         &insert_emoji_i,
