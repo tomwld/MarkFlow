@@ -85,6 +85,7 @@ provide('showEmojiPickerFromMenu', showEmojiPicker)
 
 let unlistenMenu: UnlistenFn | null = null
 let unlistenCloseRequest: UnlistenFn | null = null
+let unlistenOpenFile: UnlistenFn | null = null
 
 const showAbout = async () => {
     await message('MarkFlow v0.1.0\nA modern Markdown editor built with Tauri and Vue.', { title: 'About MarkFlow', kind: 'info' })
@@ -159,6 +160,14 @@ onMounted(async () => {
     await loadFile(startupFile)
   }
 
+  // Listen for Open File Request (Single Instance)
+  unlistenOpenFile = await listen<string>('open-file-request', async (event) => {
+    const path = event.payload
+    if (path) {
+        await loadFile(path)
+    }
+  })
+
   // Listen for Menu Events
   unlistenMenu = await listen('menu-event', (event) => {
     switch (event.payload) {
@@ -199,6 +208,7 @@ onUnmounted(() => {
   unregisterShortcuts()
   if (unlistenMenu) unlistenMenu()
   if (unlistenCloseRequest) unlistenCloseRequest()
+  if (unlistenOpenFile) unlistenOpenFile()
   stopFileWatcher()
 })
 </script>
