@@ -188,18 +188,146 @@ const toggleFormat = (prefix: string, suffix: string) => {
     const from = selection.from
     const to = selection.to
     const text = state.sliceDoc(from, to)
-    
-    // Simple wrapping for now
-    // Ideally we should check if already wrapped and unwrap
-    // But basic requirement is just to add buttons
-    
-    // Check if already wrapped
     const doc = state.doc
+
+    // Helper to count chars
+    const countChars = (str: string, char: string, fromStart: boolean) => {
+      let count = 0
+      if (fromStart) {
+        for (let i = 0; i < str.length; i++) {
+          if (str[i] === char) count++
+          else break
+        }
+      } else {
+        for (let i = str.length - 1; i >= 0; i--) {
+          if (str[i] === char) count++
+          else break
+        }
+      }
+      return count
+    }
+
+    // Check if prefix and suffix use the same character (e.g. *, **, ~~)
+    if (prefix.length > 0 && suffix.length > 0 && 
+        prefix[0] === suffix[0] && 
+        prefix.split('').every(c => c === prefix[0]) && 
+        suffix.split('').every(c => c === suffix[0])) {
+      
+      const char = prefix[0]
+      const targetLevel = prefix.length
+
+      // Check Internal
+      const iStart = countChars(text, char, true)
+      const iEnd = countChars(text, char, false)
+      // Only consider valid if start and end match, to avoid partial matches
+      const iLevel = (iStart > 0 && iEnd > 0 && iStart === iEnd && text.length >= iStart + iEnd) ? iStart : 0
+
+      // Check External
+      const before = doc.sliceString(Math.max(0, from - 10), from) // Look back a bit
+      const after = doc.sliceString(to, Math.min(doc.length, to + 10)) // Look forward a bit
+      const eStart = countChars(before, char, false) // Count from end of 'before'
+      const eEnd = countChars(after, char, true) // Count from start of 'after'
+      const eLevel = (eStart > 0 && eEnd > 0 && eStart === eEnd) ? eStart : 0
+
+      let mode: 'internal' | 'external' = 'internal'
+      let currentLevel = 0
+
+      // Priority: Internal > External
+      if (iLevel > 0) {
+        mode = 'internal'
+        currentLevel = iLevel
+      } else if (eLevel > 0) {
+        mode = 'external'
+        currentLevel = eLevel
+      } else {
+        mode = 'internal'
+        currentLevel = 0
+      }
+
+      // Determine Action
+      let action: 'add' | 'remove' = 'add'
+      
+      if (char === '*') {
+        if (targetLevel === 1) { // Italic
+          // Remove if level is 1 (italic) or >= 3 (bold+italic or more)
+          // This ensures we don't go beyond 3 levels, and allows reducing from 3 (or more) to 2
+          if (currentLevel === 1 || currentLevel >= 3) action = 'remove'
+        } else if (targetLevel === 2) { // Bold
+          // Remove if level is >= 2 (bold or bold+italic or more)
+          // This allows reducing from 3 (or more) to 1
+          if (currentLevel >= 2) action = 'remove'
+        }
+      } else {
+        // Default (e.g. ~~)
+        if (currentLevel >= targetLevel) action = 'remove'
+      }
+
+      if (action === 'add') {
+         if (mode === 'internal') {
+             // Wrap text
+             view.value.dispatch({
+                changes: { from, to, insert: `${prefix}${text}${suffix}` },
+                selection: { anchor: from + prefix.length, head: to + prefix.length },
+                scrollIntoView: true
+             })
+         } else {
+             // External mode but adding: Insert markers at boundaries
+             // e.g. |*foo*| -> |**foo**| (wait, that's not right)
+             // If we are adding to external, we are essentially wrapping the whole thing again?
+             // Actually, if mode is external, it means we are INSIDE markers.
+             // If we add, we are wrapping the selection (which is inside).
+             // e.g. *|foo|* -> *|**foo**|* ? No, that's valid markdown but maybe not what we want.
+             // If we want *foo* -> ***foo***. We should insert * at from and to.
+             view.value.dispatch({
+                changes: [
+                    { from, insert: prefix },
+                    { from: to, insert: suffix }
+                ],
+                selection: { anchor: from + prefix.length, head: to + prefix.length },
+                scrollIntoView: true
+             })
+         }
+      } else {
+        // Remove
+        if (mode === 'internal') {
+            // Unwrap internal: remove targetLevel chars from start and end of text
+            view.value.dispatch({
+                changes: { from, to, insert: text.slice(targetLevel, text.length - targetLevel) },
+                selection: { anchor: from, head: to - (targetLevel * 2) },
+                scrollIntoView: true
+            })
+        } else {
+            // Unwrap external: delete chars from doc
+            view.value.dispatch({
+                changes: [
+                    { from: from - targetLevel, to: from, insert: '' },
+                    { from: to, to: to + targetLevel, insert: '' }
+                ],
+                selection: { anchor: from - targetLevel, head: to - targetLevel },
+                scrollIntoView: true
+            })
+        }
+      }
+      return
+    }
+
+    // Check if the selected text itself is wrapped
+    if (text.startsWith(prefix) && text.endsWith(suffix) && text.length >= prefix.length + suffix.length) {
+      // Unwrap internal
+       view.value.dispatch({
+        changes: { from: from, to: to, insert: text.slice(prefix.length, text.length - suffix.length) },
+        selection: { anchor: from, head: to - prefix.length - suffix.length },
+        scrollIntoView: true
+      })
+      return
+    }
+
+    // Check if already wrapped externally
     const before = doc.sliceString(from - prefix.length, from)
     const after = doc.sliceString(to, to + suffix.length)
     
     if (before === prefix && after === suffix) {
-       // Unwrap
+       // Unwrap external
        view.value.dispatch({
         changes: { from: from - prefix.length, to: to + suffix.length, insert: text },
         selection: { anchor: from - prefix.length, head: to - prefix.length },
@@ -226,6 +354,88 @@ const toggleLinePrefix = (prefix: string) => {
     const fromLine = state.doc.lineAt(selection.from)
     const toLine = state.doc.lineAt(selection.to)
     
+    // Check if we are toggling a heading
+    const isHeading = /^#{1,6}\s$/.test(prefix)
+
+    if (isHeading) {
+        const changes = []
+        for (let i = fromLine.number; i <= toLine.number; i++) {
+            const line = state.doc.line(i)
+            const match = line.text.match(/^(#{1,6})\s/)
+            
+            if (match) {
+                const existingPrefix = match[0]
+                if (existingPrefix === prefix) {
+                    // Same heading level -> Toggle off (remove)
+                    changes.push({ from: line.from, to: line.from + existingPrefix.length, insert: '' })
+                } else {
+                    // Different heading level -> Replace
+                    changes.push({ from: line.from, to: line.from + existingPrefix.length, insert: prefix })
+                }
+            } else {
+                // No heading -> Add
+                changes.push({ from: line.from, to: line.from, insert: prefix })
+            }
+        }
+        
+        view.value.dispatch({
+            changes: changes,
+            scrollIntoView: true
+        })
+        return
+    }
+
+    // Check if we are toggling ordered list
+    const isOrderedList = prefix === '1. '
+    
+    if (isOrderedList) {
+        let allHaveOrderedPrefix = true
+        for (let i = fromLine.number; i <= toLine.number; i++) {
+            const line = state.doc.line(i)
+            if (!/^\d+\.\s/.test(line.text)) {
+                allHaveOrderedPrefix = false
+                break
+            }
+        }
+        
+        const changes = []
+        if (allHaveOrderedPrefix) {
+            // Remove ordered list prefix
+             for (let i = fromLine.number; i <= toLine.number; i++) {
+                const line = state.doc.line(i)
+                const match = line.text.match(/^(\d+\.\s)/)
+                if (match) {
+                    changes.push({ from: line.from, to: line.from + match[0].length, insert: '' })
+                }
+            }
+        } else {
+            // Add ordered list prefix with incrementing numbers
+            let counter = 1
+            for (let i = fromLine.number; i <= toLine.number; i++) {
+                const line = state.doc.line(i)
+                // Check if it already has a prefix (replace or add?)
+                // Assuming we just want to add if not present, or replace if another list type?
+                // For simplicity, let's just prepend, or if it has another list marker, replace it?
+                // The requirement is specifically for ordered list increment.
+                
+                // Let's handle replacement of unordered list or existing ordered list (to re-number)
+                const match = line.text.match(/^([-*+]|\d+\.)\s/)
+                if (match) {
+                     changes.push({ from: line.from, to: line.from + match[0].length, insert: `${counter}. ` })
+                } else {
+                     changes.push({ from: line.from, to: line.from, insert: `${counter}. ` })
+                }
+                counter++
+            }
+        }
+        
+        view.value.dispatch({
+            changes: changes,
+            scrollIntoView: true
+        })
+        return
+    }
+
     let allHavePrefix = true
     for (let i = fromLine.number; i <= toLine.number; i++) {
         const line = state.doc.line(i)

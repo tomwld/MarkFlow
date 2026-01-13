@@ -141,6 +141,18 @@ const onEmojiSelect = (emoji: string) => {
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertStrikethrough')" @click="insertMarkdown('strikethrough')">
         <div class="i-carbon-text-strikethrough text-lg"></div>
       </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertMark')" @click="insertMarkdown('mark')">
+        <div class="i-carbon-text-fill text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertInlineCode')" @click="insertMarkdown('inlineCode')">
+        <div class="i-carbon-code text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertSubscript')" @click="insertMarkdown('subscript')">
+        <div class="i-carbon-text-subscript text-lg"></div>
+      </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertSuperscript')" @click="insertMarkdown('superscript')">
+        <div class="i-carbon-text-superscript text-lg"></div>
+      </button>
        <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertQuote')" @click="insertMarkdown('quote')">
         <div class="i-carbon-quotes text-lg"></div>
       </button>
@@ -157,6 +169,9 @@ const onEmojiSelect = (emoji: string) => {
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertTable')" @click="insertMarkdown('table')">
         <div class="i-carbon-table text-lg"></div>
       </button>
+      <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertHorizontalRule')" @click="insertMarkdown('horizontalRule')">
+        <div class="i-carbon-subtract text-lg"></div>
+      </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertFootnote')" @click="insertMarkdown('footnote')">
         <div class="i-carbon-bookmark text-lg"></div>
       </button>
@@ -164,7 +179,7 @@ const onEmojiSelect = (emoji: string) => {
         <div class="i-carbon-checkbox-checked text-lg"></div>
       </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertCodeBlock')" @click="insertMarkdown('codeblock')">
-        <div class="i-carbon-code text-lg"></div>
+        <div class="i-carbon-terminal text-lg"></div>
       </button>
       <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded" :title="t('toolbar.insertLink')" @click="insertMarkdown('link')">
         <div class="i-carbon-link text-lg"></div>

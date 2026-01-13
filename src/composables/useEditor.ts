@@ -18,7 +18,7 @@ export function useEditor() {
     insertText(emoji)
   }
 
-  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock' | 'link' | 'image' | 'bold' | 'italic' | 'strikethrough' | 'heading' | 'unorderedList' | 'orderedList' | 'quote') => {
+  const insertMarkdown = (type: 'table' | 'footnote' | 'tasklist' | 'codeblock' | 'link' | 'image' | 'bold' | 'italic' | 'strikethrough' | 'heading' | 'unorderedList' | 'orderedList' | 'quote' | 'inlineCode' | 'mark' | 'subscript' | 'superscript' | 'horizontalRule') => {
     if (!editorRef.value) return
 
     let text = ''
@@ -32,6 +32,18 @@ export function useEditor() {
       case 'strikethrough':
         editorRef.value.toggleFormat('~~', '~~')
         return
+      case 'mark':
+        editorRef.value.toggleFormat('==', '==')
+        return
+      case 'subscript':
+        editorRef.value.toggleFormat('~', '~')
+        return
+      case 'superscript':
+        editorRef.value.toggleFormat('^', '^')
+        return
+      case 'inlineCode':
+        editorRef.value.toggleFormat('`', '`')
+        return
       case 'heading':
         editorRef.value.toggleLinePrefix('# ')
         return
@@ -44,6 +56,9 @@ export function useEditor() {
       case 'quote':
         editorRef.value.toggleLinePrefix('> ')
         return
+      case 'horizontalRule':
+        text = '\n---\n'
+        break
       case 'table':
         text = '\n| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |\n'
         break
