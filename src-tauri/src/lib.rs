@@ -70,7 +70,6 @@ struct MenuLabels {
     save_as: String,
     export_pdf: String,
     export_html: String,
-    export_word: String,
     close: String,
     quit: String,
     edit: String,
@@ -111,7 +110,6 @@ impl Default for MenuLabels {
             save_as: "Save As".into(),
             export_pdf: "Export to PDF".into(),
             export_html: "Export to HTML".into(),
-            export_word: "Export to Word".into(),
             close: "Close".into(),
             quit: "Quit".into(),
             edit: "Edit".into(),
@@ -152,7 +150,6 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
     let save_as_i = MenuItem::with_id(handle, "file-save-as", &labels.save_as, true, Some("CmdOrCtrl+Alt+S"))?;
     let export_pdf_i = MenuItem::with_id(handle, "file-export-pdf", &labels.export_pdf, true, Some("CmdOrCtrl+Alt+P"))?;
     let export_html_i = MenuItem::with_id(handle, "file-export-html", &labels.export_html, true, Some("CmdOrCtrl+Alt+H"))?;
-    let export_word_i = MenuItem::with_id(handle, "file-export-word", &labels.export_word, true, Some("CmdOrCtrl+Alt+W"))?;
     let close_i = MenuItem::with_id(handle, "file-close", &labels.close, true, Some("CmdOrCtrl+W"))?;
     // Use custom MenuItem for Quit to handle unsaved changes
     let quit_i = MenuItem::with_id(handle, "file-quit", &labels.quit, true, None::<&str>)?;
@@ -164,7 +161,7 @@ fn build_menu(handle: &AppHandle, labels: &MenuLabels) -> tauri::Result<Menu<Wry
         &sep,
         &save_i, &save_as_i, 
         &sep,
-        &export_pdf_i, &export_html_i, &export_word_i,
+        &export_pdf_i, &export_html_i,
         &sep,
         &close_i, 
         &sep,

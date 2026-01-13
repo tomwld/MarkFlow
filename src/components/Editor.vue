@@ -8,7 +8,7 @@ import { ref, watch, computed } from 'vue'
 import { useDark } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
+import { EditorSelection, EditorState } from '@codemirror/state'
 import { 
   parseTable, formatTable, addRow, deleteRow, addColumn, deleteColumn, getColumnIndex, isTableLine 
 } from '../utils/table'
@@ -65,7 +65,7 @@ const handleReady = (payload: { view: EditorView }) => {
     const pos = lineInfo.from + col - 1
     
     view.value.dispatch({
-      selection: { anchor: pos, head: pos },
+      selection: EditorSelection.cursor(pos),
       scrollIntoView: true,
       effects: EditorView.scrollIntoView(pos, { y: 'center' })
     })
@@ -78,7 +78,7 @@ watch(() => props.scrollToLine, (line) => {
     if (line > 0 && line <= doc.lines) {
       const lineInfo = doc.line(line)
       view.value.dispatch({
-        selection: { anchor: lineInfo.from },
+        selection: EditorSelection.cursor(lineInfo.from),
         scrollIntoView: true,
         effects: EditorView.scrollIntoView(lineInfo.from, { y: 'center' })
       })
@@ -152,7 +152,7 @@ const insertText = (text: string) => {
     
     view.value.dispatch({
       changes: { from, to, insert: text },
-      selection: { anchor: from + text.length, head: from + text.length },
+      selection: EditorSelection.cursor(from + text.length),
       scrollIntoView: true
     })
   }
@@ -175,7 +175,7 @@ const insertAtCursorAndEnd = (cursorText: string, endText: string) => {
         { from, to, insert: cursorText },
         { from: docLength, insert: prefix + endText }
       ],
-      selection: { anchor: from + cursorText.length, head: from + cursorText.length },
+      selection: EditorSelection.cursor(from + cursorText.length),
       scrollIntoView: true
     })
   }
@@ -267,7 +267,7 @@ const toggleFormat = (prefix: string, suffix: string) => {
              // Wrap text
              view.value.dispatch({
                 changes: { from, to, insert: `${prefix}${text}${suffix}` },
-                selection: { anchor: from + prefix.length, head: to + prefix.length },
+                selection: EditorSelection.single(from + prefix.length, to + prefix.length),
                 scrollIntoView: true
              })
          } else {
@@ -283,7 +283,7 @@ const toggleFormat = (prefix: string, suffix: string) => {
                     { from, insert: prefix },
                     { from: to, insert: suffix }
                 ],
-                selection: { anchor: from + prefix.length, head: to + prefix.length },
+                selection: EditorSelection.single(from + prefix.length, to + prefix.length),
                 scrollIntoView: true
              })
          }
@@ -293,7 +293,7 @@ const toggleFormat = (prefix: string, suffix: string) => {
             // Unwrap internal: remove targetLevel chars from start and end of text
             view.value.dispatch({
                 changes: { from, to, insert: text.slice(targetLevel, text.length - targetLevel) },
-                selection: { anchor: from, head: to - (targetLevel * 2) },
+                selection: EditorSelection.single(from, to - (targetLevel * 2)),
                 scrollIntoView: true
             })
         } else {
@@ -303,7 +303,7 @@ const toggleFormat = (prefix: string, suffix: string) => {
                     { from: from - targetLevel, to: from, insert: '' },
                     { from: to, to: to + targetLevel, insert: '' }
                 ],
-                selection: { anchor: from - targetLevel, head: to - targetLevel },
+                selection: EditorSelection.single(from - targetLevel, to - targetLevel),
                 scrollIntoView: true
             })
         }
@@ -316,7 +316,7 @@ const toggleFormat = (prefix: string, suffix: string) => {
       // Unwrap internal
        view.value.dispatch({
         changes: { from: from, to: to, insert: text.slice(prefix.length, text.length - suffix.length) },
-        selection: { anchor: from, head: to - prefix.length - suffix.length },
+        selection: EditorSelection.single(from, to - prefix.length - suffix.length),
         scrollIntoView: true
       })
       return
@@ -330,17 +330,14 @@ const toggleFormat = (prefix: string, suffix: string) => {
        // Unwrap external
        view.value.dispatch({
         changes: { from: from - prefix.length, to: to + suffix.length, insert: text },
-        selection: { anchor: from - prefix.length, head: to - prefix.length },
+        selection: EditorSelection.single(from - prefix.length, to - prefix.length),
         scrollIntoView: true
       })
     } else {
       // Wrap
       view.value.dispatch({
         changes: { from, to, insert: `${prefix}${text}${suffix}` },
-        selection: { 
-          anchor: from + prefix.length, 
-          head: to + prefix.length 
-        },
+        selection: EditorSelection.single(from + prefix.length, to + prefix.length),
         scrollIntoView: true
       })
     }
@@ -518,7 +515,7 @@ const editTable = (action: 'insertRowAbove' | 'insertRowBelow' | 'insertColumnLe
   view.value.dispatch({
     changes: { from: startPos, to: endPos, insert: newText },
     // Move selection to start of table for simplicity, or try to maintain relative pos
-    selection: { anchor: startPos, head: startPos },
+    selection: EditorSelection.cursor(startPos),
     scrollIntoView: true
   });
 }
@@ -547,12 +544,13 @@ const handleContextMenu = (e: MouseEvent) => {
   if (!pos) return;
 
   const line = view.value.state.doc.lineAt(pos);
+  
   if (isTableLine(line.text)) {
     e.preventDefault();
     
     // Move cursor to click position
     view.value.dispatch({
-      selection: { anchor: pos, head: pos }
+      selection: EditorSelection.cursor(pos)
     });
 
     contextMenuX.value = e.clientX;
@@ -564,7 +562,7 @@ const handleContextMenu = (e: MouseEvent) => {
     
     // Move cursor to click position
     view.value.dispatch({
-      selection: { anchor: pos, head: pos }
+      selection: EditorSelection.cursor(pos)
     });
 
     contextMenuX.value = e.clientX;

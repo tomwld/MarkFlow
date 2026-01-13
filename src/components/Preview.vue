@@ -7,7 +7,7 @@ import mark from 'markdown-it-mark'
 import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import deflist from 'markdown-it-deflist'
-import { computed, watch, ref, onUpdated, onMounted, nextTick } from 'vue'
+import { computed, watch, ref, onMounted, nextTick } from 'vue'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import mermaid from 'mermaid'
 import 'github-markdown-css/github-markdown.css'
@@ -81,7 +81,7 @@ const containerRef = ref<HTMLElement | null>(null)
 const renderMermaid = async () => {
   if (!containerRef.value) return
   await nextTick()
-  const mermaidNodes = containerRef.value.querySelectorAll('.mermaid')
+  const mermaidNodes = Array.from(containerRef.value.querySelectorAll('.mermaid')) as HTMLElement[]
   if (mermaidNodes.length > 0) {
     try {
         // Reset mermaid content if it was already rendered to avoid duplication or errors

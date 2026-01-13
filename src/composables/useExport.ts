@@ -1,13 +1,12 @@
 import { save, message } from '@tauri-apps/plugin-dialog'
 import { useDocuments } from './useDocuments'
 import { exportToHtml } from '../utils/export/html'
-import { exportToWord } from '../utils/export/word'
 import { exportToPdf } from '../utils/export/pdf'
 
 export function useExport() {
   const { activeDocument } = useDocuments()
 
-  const exportDocument = async (format?: 'pdf' | 'html' | 'word') => {
+  const exportDocument = async (format?: 'pdf' | 'html') => {
     if (!activeDocument.value) return
     
     const title = activeDocument.value.title.replace(/\.(md|markdown)$/i, '') || 'Untitled'
@@ -18,12 +17,9 @@ export function useExport() {
       filters.push({ name: 'PDF', extensions: ['pdf'] })
     } else if (format === 'html') {
       filters.push({ name: 'HTML', extensions: ['html'] })
-    } else if (format === 'word') {
-      filters.push({ name: 'Word Document', extensions: ['docx'] })
     } else {
       filters.push({ name: 'PDF', extensions: ['pdf'] })
       filters.push({ name: 'HTML', extensions: ['html'] })
-      filters.push({ name: 'Word Document', extensions: ['docx'] })
     }
 
     try {
@@ -37,8 +33,6 @@ export function useExport() {
           await exportToPdf(content, title, selected)
         } else if (selected.endsWith('.html')) {
           await exportToHtml(content, title, selected)
-        } else if (selected.endsWith('.docx')) {
-          await exportToWord(content, title, selected)
         }
       }
     } catch (error) {

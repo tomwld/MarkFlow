@@ -13,7 +13,6 @@ export default {
     saveAs: '另存为',
     exportPdf: '导出为 PDF',
     exportHtml: '导出为 HTML',
-    exportWord: '导出为 Word',
     close: '关闭',
     recent: '最近打开',
     exit: '退出',
@@ -42,6 +41,10 @@ export default {
     help: '帮助',
     about: '关于',
     markdownSyntax: 'Markdown 语法'
+  },
+  mermaid: {
+    edit: '编辑图表',
+    visualEditor: '可视化编辑器',
   },
   table: {
     actions: '表格操作',

@@ -17,7 +17,6 @@
     - [x] 待完成任务
     - [x] 待完成任务
     - [x] 待完成任务
-    **其他的**
   * 代码块（\`\`\` language）与行内代码（`code`）
 
 
@@ -61,20 +60,56 @@ public class Person {
 
 [^2]: 此处指拉力较强的一种弓。钧，古代重量单位，三十斤为一钧。
 
+
 ```mermaid
-graph LR
-    start[开始] --> input[输入A,B,C]
-    input --> conditionA{A是否大于B}
-    conditionA -- YES --> conditionC{A是否大于C}
-    conditionA -- NO --> conditionB{B是否大于C}
-    conditionC -- YES --> printA[输出A]
-    conditionC -- NO --> printC[输出C]
-    conditionB -- YES --> printB[输出B]
-    conditionB -- NO --> printC[输出C]
-    printA --> stop[结束]
-    printC --> stop
-    printB --> stop
+flowchart TD
+    A[开始]
+    B(填表)
+    C(报备)
+    D([审核])
+    E{备案}
+    F[发布]
+    A --> B
+    A --> C
+    B --> D
+    C --> E
+    D --> F
+    E --> F
+
 ```
+
+```mermaid
+---
+title: Animal example
+---
+classDiagram
+    note "From Duck till Zebra"
+    Animal <|-- Duck
+    note for Duck "can fly\ncan swim\ncan dive\ncan help in debugging"
+    Animal <|-- Fish
+    Animal <|-- Zebra
+    Animal : +int age
+    Animal : +String gender
+    Animal: +isMammal()
+    Animal: +mate()
+    class Duck{
+        +String beakColor
+        +swim()
+        +quack()
+    }
+    class Fish{
+        -int sizeInFeet
+        -canEat()
+    }
+    class Zebra{
+        +bool is_wild
+        +run()
+    }
+
+
+
+```
+
 
 
 [^5]: 两岸晓烟

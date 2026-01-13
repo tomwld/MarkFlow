@@ -179,7 +179,6 @@ onMounted(async () => {
         case 'file-quit': quitApp(); break;
         case 'file-export-pdf': exportDocument('pdf'); break;
         case 'file-export-html': exportDocument('html'); break;
-        case 'file-export-word': exportDocument('word'); break;
         case 'file-close': if (activeDocId.value) closeFile(activeDocId.value); break;
         case 'view-toggle-sidebar': showSidebar.value = !showSidebar.value; break;
         case 'view-toggle-outline': toggleOutline(); break;

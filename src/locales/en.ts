@@ -13,7 +13,6 @@ export default {
     saveAs: 'Save As',
     exportPdf: 'Export to PDF',
     exportHtml: 'Export to HTML',
-    exportWord: 'Export to Word',
     close: 'Close',
     recent: 'Recent Files',
     exit: 'Exit',
@@ -42,6 +41,10 @@ export default {
     help: 'Help',
     about: 'About',
     markdownSyntax: 'Markdown Syntax'
+  },
+  mermaid: {
+    edit: 'Edit Chart',
+    visualEditor: 'Visual Editor',
   },
   table: {
     actions: 'Table Actions',
