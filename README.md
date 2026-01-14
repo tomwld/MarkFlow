@@ -24,7 +24,6 @@
   - **Context Menu**: "Open with MarkFlow" option in File Explorer.
 - **🛠️ Productivity Tools**:
   - **Focus Mode**: Distraction-free writing.
-  - **Visual Mermaid Editor**: Bi-directional Mermaid Diagram support: Write code or edit visually.
   - **Extended Syntax**: Support for GFM, Subscript (~sub~), Superscript (^sup^), and Emoji codes (:smile:).
   - **Math Support**: Render LaTeX math equations using KaTeX.
   - **Interactive Preview**: Clickable task lists and links in the preview window.
