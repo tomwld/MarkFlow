@@ -46,6 +46,7 @@ const injectLineNumbers = (md: MarkdownIt) => {
     const token = tokens[idx]
     if (token.map && token.type.endsWith('_open')) {
       token.attrPush(['data-line', String(token.map[0])])
+      token.attrPush(['data-line-end', String(token.map[1])])
     }
     return originalRender(tokens, idx, options)
   }
@@ -105,11 +106,12 @@ md.renderer.rules.math_block = (tokens, idx) => {
 md.renderer.rules.fence = (tokens, idx, options, _env, _self) => {
   const token = tokens[idx]
   const line = token.map ? String(token.map[0]) : ''
+  const endLine = token.map ? String(token.map[1]) : ''
   const info = token.info ? md.utils.unescapeAll(token.info).trim() : ''
   const lang = info.split(/\s+/g)[0]
 
   if (lang === 'mermaid') {
-     return `<div class="mermaid-wrapper" ${line ? `data-line="${line}"` : ''}><div class="mermaid">${token.content}</div></div>`
+     return `<div class="mermaid-wrapper" ${line ? `data-line="${line}"` : ''} ${endLine ? `data-line-end="${endLine}"` : ''}><div class="mermaid">${token.content}</div></div>`
    }
    
    let highlighted = ''
@@ -120,10 +122,10 @@ md.renderer.rules.fence = (tokens, idx, options, _env, _self) => {
   }
 
   if (highlighted.startsWith('<pre')) {
-    return highlighted.replace('<pre', `<pre ${line ? `data-line="${line}"` : ''}`)
+    return highlighted.replace('<pre', `<pre ${line ? `data-line="${line}"` : ''} ${endLine ? `data-line-end="${endLine}"` : ''}`)
   }
 
-  return `<pre ${line ? `data-line="${line}"` : ''}><code${lang ? ` class="language-${lang}"` : ''}>${highlighted}</code></pre>\n`
+  return `<pre ${line ? `data-line="${line}"` : ''} ${endLine ? `data-line-end="${endLine}"` : ''}><code${lang ? ` class="language-${lang}"` : ''}>${highlighted}</code></pre>\n`
 }
 
 const isDark = useDark()
@@ -275,8 +277,11 @@ const scrollToLine = (newLine: number) => {
     
     // If we have a next element, we can calculate the ratio within the block
     let nextLine = -1
-    
-    if (nextEl) {
+
+    const endLineAttr = currentEl.getAttribute('data-line-end')
+    if (endLineAttr) {
+        nextLine = parseInt(endLineAttr)
+    } else if (nextEl) {
         nextLine = parseInt(nextEl.getAttribute('data-line') || '-1')
     } else {
         // If no next element, assume the block extends to the end of the document
@@ -284,17 +289,9 @@ const scrollToLine = (newLine: number) => {
     }
 
     if (nextLine > currentLine && nextLine > targetLine) {
-        // Check if currentEl is a mermaid block
-        const isMermaid = currentEl.classList.contains('mermaid-wrapper') || currentEl.querySelector('.mermaid')
-        
-        if (isMermaid) {
-            // For mermaid diagrams, lock to the top (ratio = 0) to avoid jumping inside the chart
-            ratio = 0
-        } else {
-            const totalLines = nextLine - currentLine
-            const lineDiff = targetLine - currentLine
-            ratio = Math.max(0, Math.min(lineDiff / totalLines, 1))
-        }
+        const totalLines = nextLine - currentLine
+        const lineDiff = targetLine - currentLine
+        ratio = Math.max(0, Math.min(lineDiff / totalLines, 1))
     }
     
     // Calculate target scroll position
